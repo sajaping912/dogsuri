@@ -1201,6 +1201,7 @@ function update(delta) {
     const deltaTimeSeconds = delta / 1000.0;
 
     // Update common base vertical position
+   
     e.baseY += ENEMY_MOVEMENT_SPEED_PPS * deltaTimeSeconds;
     
     let newX = e.x; 
@@ -1260,7 +1261,25 @@ function update(delta) {
 
   bullets.forEach((b, bi) => {
     enemies.forEach((e, ei) => {
-      if (b.x < e.x + e.w && b.x + b.w > e.x && b.y < e.y + e.h && b.y + b.h > e.y) {
+      // --- START: Modified collision logic for less sensitivity ---
+      const collisionPaddingFactor = 0.25; // This means 25% padding on each side of the bullet.
+                                           // The bullet's "core" will be its central 50% (1 - 2*0.25).
+
+      const coreBulletOffsetX = b.w * collisionPaddingFactor;
+      const coreBulletOffsetY = b.h * collisionPaddingFactor;
+
+      const coreBulletX = b.x + coreBulletOffsetX;
+      const coreBulletY = b.y + coreBulletOffsetY;
+
+      const coreBulletWidth = b.w * (1 - 2 * collisionPaddingFactor);
+      const coreBulletHeight = b.h * (1 - 2 * collisionPaddingFactor);
+
+      // Check collision between the bullet's core and the enemy's full bounding box
+      if (coreBulletX < e.x + e.w &&
+          coreBulletX + coreBulletWidth > e.x &&
+          coreBulletY < e.y + e.h &&
+          coreBulletY + coreBulletHeight > e.y) {
+      // --- END: Modified collision logic for less sensitivity ---
         if (!sentenceActive) {
             const sentenceToFirework = sentences[sentenceIndex];
             const globalIndexOfSentence = sentenceIndex;
@@ -1289,50 +1308,27 @@ function draw() {
   ctx.drawImage(playerImg, player.x, player.y, player.w, player.h);
 
   enemies.forEach(e => {
-    if (e.imgIndex === 3) { // Maple Leaf (enemy4.png) - Draw with rotation
+    if (e.imgIndex === 2 || e.imgIndex === 3) { // Cosmos or Maple Leaf
       ctx.save();
       ctx.translate(e.x + e.w / 2, e.y + e.h / 2);
       ctx.rotate(e.rotation);
       ctx.drawImage(e.img, -e.w / 2, -e.h / 2, e.w, e.h);
       ctx.restore();
-    } else if (e.imgIndex === 2) { // Cosmos Flower (enemy3.png) - Draw with rotation
-      ctx.save();
-      ctx.translate(e.x + e.w / 2, e.y + e.h / 2);
-      ctx.rotate(e.rotation);
-      ctx.drawImage(e.img, -e.w / 2, -e.h / 2, e.w, e.h);
-      ctx.restore();
-    } else if (e.imgIndex === 1) { // Coffee cup (enemy2.png)
-      const scaleFactor = 1.3;
-      const enlargedWidth = e.w * scaleFactor; 
-      const enlargedHeight = e.h * scaleFactor;
-      const enlargedX = e.x - (enlargedWidth - e.w) / 2; 
-      const enlargedY = e.y - (enlargedHeight - e.h) / 2;
-      ctx.drawImage(e.img, enlargedX, enlargedY, enlargedWidth, enlargedHeight);
-      
-      if (coffeeSteamVideo && coffeeVideoAssetReady && coffeeSteamVideo.readyState >= HTMLVideoElement.HAVE_CURRENT_DATA) {
-        const videoAspectRatio = (coffeeSteamVideo.videoWidth > 0 && coffeeSteamVideo.videoHeight > 0) ? coffeeSteamVideo.videoWidth / coffeeSteamVideo.videoHeight : 1;
-        let steamWidth = enlargedWidth * 1.5; let steamHeight = steamWidth / videoAspectRatio;
-        const baseX = enlargedX + (enlargedWidth - steamWidth) / 2 - 4;
-        const baseYOffset = steamHeight * 0.6; const additionalYOffset = 5; 
-        const baseY = enlargedY - baseYOffset - additionalYOffset;
-        const steamInstances = [
-          { offsetXRatio: 0,    offsetYRatio: 0,     scale: 1.0, alpha: 0.6 },
-          { offsetXRatio: -0.15 * 0.56, offsetYRatio: -0.1,  scale: 0.9, alpha: 0.45 },
-          { offsetXRatio: 0.15 * 0.56,  offsetYRatio: -0.05, scale: 1.1, alpha: 0.45 } 
-        ];
-        steamInstances.forEach(instance => {
-          ctx.save();
-          const currentSteamWidth = steamWidth * instance.scale; const currentSteamHeight = steamHeight * instance.scale;
-          const offsetX = steamWidth * instance.offsetXRatio; const offsetY = steamHeight * instance.offsetYRatio;
-          const steamX = baseX + offsetX - (currentSteamWidth - steamWidth) / 2;
-          const steamY = baseY + offsetY - (currentSteamHeight - steamHeight) / 2;
-          ctx.globalAlpha = instance.alpha;
-          ctx.drawImage(coffeeSteamVideo, steamX, steamY, currentSteamWidth, currentSteamHeight);
-          ctx.restore();
-        });
-      }
-    } else { // Default drawing for other enemies (e.g., enemy1.png, enemy5.png)
+    } else {
       ctx.drawImage(e.img, e.x, e.y, e.w, e.h);
+    }
+
+    // Draw coffee steam for enemy2.png (coffee cup, index 1)
+    if (e.imgIndex === 1 && coffeeSteamVideo && coffeeSteamVideo.readyState >= HTMLVideoElement.HAVE_ENOUGH_DATA && !coffeeSteamVideo.paused) {
+      const steamScale = 0.5; // Scale of the steam relative to enemy size
+      const steamWidth = e.w * steamScale * 1.5; // 현재값(0.75)의 2배
+      const steamHeight = e.h * steamScale * 1.6; // 높이도 2배로 키움(0.8 * 2 = 1.6)
+      const steamOffsetX = (e.w - steamWidth) / 2; // Center the steam
+      const steamOffsetY = -steamHeight * 0.85; // Position above the cup
+
+      ctx.globalAlpha = 0.65; // Make steam semi-transparent
+      ctx.drawImage(coffeeSteamVideo, e.x + steamOffsetX, e.y + steamOffsetY, steamWidth, steamHeight);
+      ctx.globalAlpha = 1.0; // Reset globalAlpha
     }
   });
 
