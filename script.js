@@ -251,13 +251,6 @@ const enemyImgs = [
 const bulletImg = new Image();
 bulletImg.src = 'images/bubble_bullet.png';
 
-// --- START: 배경 이미지 로드 관련 변수 제거 ---
-// const backgroundImage = new Image(); // 제거
-// backgroundImage.src = 'images/new_background.jpg'; // 제거
-// let isBackgroundImageLoaded = false; // 제거
-// --- END: 배경 이미지 로드 관련 변수 제거 ---
-
-
 const bgmFiles = [
   'sounds/background.mp3'
 ];
@@ -272,7 +265,6 @@ function updateVolumeIcon() {
   volumeBtn.textContent = isMuted ? "🔇" : "🔊";
 }
 
-// --- START: 문장 오디오 재생을 위한 변수 및 함수 ---
 let currentSentenceAudio = null;
 
 async function playSentenceAudio(index) {
@@ -305,7 +297,6 @@ async function playSentenceAudio(index) {
     });
   });
 }
-// --- END: 문장 오디오 재생을 위한 변수 및 함수 ---
 
 
 volumeBtn.onclick = function () {
@@ -339,11 +330,8 @@ setInterval(() => {
 }, 1000);
 
 
-// Asset 로딩 관리
 let allAssetsReady = false;
-// --- MODIFICATION: 배경 이미지 로드 개수 제거 ---
-let assetsToLoad = 1 + enemyImgs.length + 1; // player, enemies, bullet (배경 이미지 카운트 제거)
-// --- END MODIFICATION ---
+let assetsToLoad = 1 + enemyImgs.length + 1;
 let loadedAssetCount = 0;
 let coffeeVideoAssetReady = false;
 
@@ -362,18 +350,16 @@ function coffeeVideoReady() {
 function coffeeVideoError() {
   if (!coffeeVideoAssetReady) {
     console.error("Coffee steam video could not be loaded. Steam effect will be disabled.");
-    coffeeVideoAssetReady = true; // Mark as "ready" to not block game start, even if failed
+    coffeeVideoAssetReady = true;
     checkAllAssetsReady();
   }
 }
 
 function checkAllAssetsReady() {
-  // --- MODIFICATION: isBackgroundImageLoaded 조건 제거 ---
   if (loadedAssetCount >= assetsToLoad && coffeeVideoAssetReady) {
     allAssetsReady = true;
     console.log("All game assets (images and video) are ready.");
   }
-  // --- END MODIFICATION ---
 }
 
 playerImg.onload = assetLoaded;
@@ -386,11 +372,6 @@ enemyImgs.forEach(img => {
 
 bulletImg.onload = assetLoaded;
 bulletImg.onerror = () => { console.error("Failed to load bullet image."); assetLoaded(); };
-
-// --- MODIFICATION: 배경 이미지 로드 핸들러 제거 ---
-// backgroundImage.onload = () => { ... }; // 제거
-// backgroundImage.onerror = () => { ... }; // 제거
-// --- END MODIFICATION ---
 
 
 if (coffeeSteamVideo) {
@@ -432,8 +413,8 @@ const PETAL_DRIFT_X_PPS_BASE = 30;
 const PETAL_FLUTTER_AMPLITUDE_BASE = 3.5;
 const PETAL_FLUTTER_SPEED_BASE = 3.0;
 
-const SENTENCE_VERTICAL_ADJUSTMENT = -86; // Changed from -80 to -86 (moved up by 6px)
-const ANSWER_OFFSET_Y = 82; // Changed from 70 to 82 (increased gap by 12px)
+const SENTENCE_VERTICAL_ADJUSTMENT = -86;
+const ANSWER_OFFSET_Y = 82;
 const LINE_HEIGHT = 30;
 const PLAYER_TOUCH_Y_OFFSET = 15;
 
@@ -535,14 +516,10 @@ function isQuestion(sentenceText) {
   return sentenceText.trim().endsWith('?');
 }
 
-// =======================================================================
-// START OF MODIFIED getWordTranslation FUNCTION
-// =======================================================================
 async function getWordTranslation(word, targetLang = 'ko') {
   const cleanedWord = word.replace(/[^a-zA-Z0-9]/g, "").toLowerCase().trim();
   if (!cleanedWord) return "Error: Invalid word";
 
-  // Simulate a very short delay
   await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 100));
 
   const mockTranslations = {
@@ -588,7 +565,7 @@ async function getWordTranslation(word, targetLang = 'ko') {
     "green": "초록색",
     "slide": "미끄럼틀",
     "who": "누가",
-    "bring": "가져오다", // Restored translation for "bring"
+    "bring": "가져오다",
     "cake": "케이크",
     "picnic": "소풍",
     "today": "오늘",
@@ -605,10 +582,10 @@ async function getWordTranslation(word, targetLang = 'ko') {
     "butterfly": "나비",
     "net": "그물",
     "and": "그리고",
-    "be": "이다", // covers "is", "am", "are", "was", "were" contextually
+    "be": "이다",
     "very": "매우",
     "gentle": "부드러운",
-    "wont": "～하지 않을 것이다", // "will not"
+    "wont": "～하지 않을 것이다",
     "share": "공유하다",
     "from": "～로부터",
     "your": "너의",
@@ -624,7 +601,7 @@ async function getWordTranslation(word, targetLang = 'ko') {
     "feels": "느끼다",
     "too": "너무",
     "sleepy": "졸린",
-    "have": "가지다", // covers "has"
+    "have": "가지다",
     "clean": "청소하다",
     "playroom": "놀이방",
     "if": "만약",
@@ -644,11 +621,11 @@ async function getWordTranslation(word, targetLang = 'ko') {
     "break": "고장나다",
     "again": "다시",
     "soon": "곧",
-    "dont": "～하지 않다", // "do not"
+    "dont": "～하지 않다",
     "crash": "충돌하다",
     "hard": "세게",
     "would": "～일 것이다 (가정)",
-    "do": "하다", // covers "does", "did"
+    "do": "하다",
     "flying": "나는",
     "carpet": "양탄자",
     "fly": "날다",
@@ -686,7 +663,7 @@ async function getWordTranslation(word, targetLang = 'ko') {
     "help": "돕다",
     "long": "긴",
     "stick": "막대기",
-    "wouldnt": "～하지 않을 것이다 (가정)", // "would not"
+    "wouldnt": "～하지 않을 것이다 (가정)",
     "eat": "먹다",
     "even": "심지어",
     "hungry": "배고픈",
@@ -721,7 +698,7 @@ async function getWordTranslation(word, targetLang = 'ko') {
     "can": "～할 수 있다",
     "shiny": "빛나는",
     "rock": "돌",
-    "stone": "돌", // Often interchangeable with rock in this context
+    "stone": "돌",
     "cannot": "～할 수 없다",
     "now": "지금",
     "raining": "비가 오는",
@@ -730,7 +707,7 @@ async function getWordTranslation(word, targetLang = 'ko') {
     "muddy": "진흙탕의",
     "see": "보다",
     "new": "새로운",
-    "over": "～너머로", // Can also mean '끝나서' depending on context
+    "over": "～너머로",
     "lunch": "점심",
     "space": "우주",
     "aliens": "외계인",
@@ -742,13 +719,13 @@ async function getWordTranslation(word, targetLang = 'ko') {
     "jump": "뛰다",
     "so": "그렇게",
     "high": "높이",
-    "like": "～처럼", // Can also be '좋아하다'
+    "like": "～처럼",
     "that": "저것",
     "practiced": "연습했다",
     "every": "매",
     "day": "날",
     "trampoline": "트램펄린",
-    "cant": "～할 수 없다", // "can not"
+    "cant": "～할 수 없다",
     "before": "～전에",
     "open": "열다",
     "jar": "단지",
@@ -759,32 +736,32 @@ async function getWordTranslation(word, targetLang = 'ko') {
     "crumbs": "부스러기",
     "couch": "소파",
     "keep": "유지하다",
-    "secrets": "비밀들", // plural of secret
+    "secrets": "비밀들",
     "longer": "더 오래",
     "than": "～보다",
     "hours": "시간들",
     "hear": "듣다",
     "crunch": "바삭거리는 소리",
     "cartoons": "만화",
-    "playing": "재생 중", // Or '놀고 있는'
+    "playing": "재생 중",
     "loudly": "시끄럽게",
     "could": "～할 수 있었다",
     "find": "찾다",
-    "there": "거기에", // Or '저기'
+    "there": "거기에",
     "hiding": "숨는 중",
     "scared": "무서워하는",
     "of": "～의",
     "vacuum": "진공청소기",
     "cleaner": "청소기",
     "noise": "소음",
-    "looking": "찾는 중", // Or '보는 중'
+    "looking": "찾는 중",
     "him": "그를",
     "snack": "간식",
     "gone": "사라진",
     "last": "지난",
     "night": "밤",
     "rolled": "굴러갔다",
-    "chest": "상자", // (보물) 상자
+    "chest": "상자",
     "taken": "가져간",
     "garden": "정원",
     "while": "～하는 동안",
@@ -792,20 +769,19 @@ async function getWordTranslation(word, targetLang = 'ko') {
     "carry": "나르다",
     "superhero": "슈퍼히어로",
     "backpack": "배낭",
-    "couldnt": "～할 수 없었다", // "could not"
+    "couldnt": "～할 수 없었다",
     "paper": "종이",
-    "show": "보여주다", // Or '쇼'
+    "show": "보여주다",
     "puppet": "인형",
-    // "boots" was duplicated, removed one instance. Kept for "rain boots" context below.
-    "missing": "사라진", // Or '그리운'
+    "missing": "사라진",
     "race": "경주",
     "thunder": "천둥",
     "loud": "시끄러운",
     "lemonade": "레모네이드",
-    "stand": "가판대", // Or '서다'
+    "stand": "가판대",
     "dripping": "물이 떨어지는",
-    "caught": "걸렸다", // Or '잡았다'
-    "cold": "감기", // Or '추운'
+    "caught": "걸렸다",
+    "cold": "감기",
     "socks": "양말",
     "getting": "되는 중",
     "dry": "마른",
@@ -817,13 +793,9 @@ async function getWordTranslation(word, targetLang = 'ko') {
   if (mockTranslations[cleanedWord]) {
     return mockTranslations[cleanedWord];
   }
-  // Fallback for words not in the mock list
   console.warn(`Translation not found for: ${cleanedWord}. Returning placeholder.`);
   return `[${cleanedWord} 뜻]`;
 }
-// =======================================================================
-// END OF MODIFIED getWordTranslation FUNCTION
-// =======================================================================
 
 let voicesPromise = null;
 let _voices = [];
@@ -967,8 +939,152 @@ async function speakWord(word) {
   });
 }
 
-const englishFont = "23.52px Arial";
+const englishFont = "21.168px Arial";
 const translationFont = "17.0px Arial";
+
+// =======================================================================
+// START OF MODIFIED splitSentence FUNCTION
+// =======================================================================
+function splitSentence(sentenceText, isCurrentlyQuestion = null) {
+    if (!sentenceText) return ["", ""];
+    const words = sentenceText.trim().split(" ");
+    const originalSentenceForShortCheck = sentenceText.trim();
+
+    let line1Words = [];
+    let line2Words = [];
+
+    const isEffectiveQuestionType = (isCurrentlyQuestion !== null) ? isCurrentlyQuestion : originalSentenceForShortCheck.endsWith('?');
+
+    if (isEffectiveQuestionType) {
+        let wordsConsumed = 0;
+        if (words.length > 0) {
+            if (isWh(words[0])) { // Starts with Wh-word
+                line1Words.push(words[0]); // Wh
+                wordsConsumed = 1;
+                if (wordsConsumed < words.length && isAux(words[wordsConsumed])) { // Wh + Aux
+                    line1Words.push(words[wordsConsumed++]); // Aux
+                    if (wordsConsumed < words.length) { // Wh + Aux + Subject (potential)
+                        line1Words.push(words[wordsConsumed++]); // Subject
+                        // Add Verb if it's the next word (4th) and a main verb
+                        if (wordsConsumed < words.length && isVerb(words[wordsConsumed]) && !isAux(words[wordsConsumed])) {
+                            line1Words.push(words[wordsConsumed++]); // Verb
+                        }
+                    }
+                } else if (wordsConsumed < words.length && (isVerb(words[wordsConsumed]) && !isAux(words[wordsConsumed]))) { // Wh (as Subj) + Verb
+                    line1Words.push(words[wordsConsumed++]); // Verb
+                } else if (wordsConsumed < words.length) { // Wh + Something else
+                    line1Words.push(words[wordsConsumed++]);
+                    if (wordsConsumed < words.length && (isAux(words[wordsConsumed]) || (isVerb(words[wordsConsumed]) && !isAux(words[wordsConsumed])) ) ) {
+                        if (line1Words.length < 4) {
+                           line1Words.push(words[wordsConsumed++]);
+                        }
+                    }
+                }
+            } else if (isAux(words[0])) { // Starts with Auxiliary
+                line1Words.push(words[0]); // Aux
+                wordsConsumed = 1;
+                if (wordsConsumed < words.length) { // Aux + Subject (potential)
+                    line1Words.push(words[wordsConsumed++]); // Subject
+                    if (wordsConsumed < words.length && isVerb(words[wordsConsumed]) && !isAux(words[wordsConsumed])) {
+                        line1Words.push(words[wordsConsumed++]); // Verb
+                    }
+                }
+            }
+        }
+
+        if (line1Words.length === 0 && words.length > 0) {
+            let splitIdx = (words.length <= 3) ? words.length : Math.min(2, words.length);
+            if (words.length === 4 ) splitIdx = 2;
+            else if (words.length === 5) splitIdx = 3;
+
+            line1Words = words.slice(0, splitIdx);
+            wordsConsumed = line1Words.length;
+        }
+        line2Words = words.slice(wordsConsumed);
+
+    } else { // Answer sentence logic
+        let subjectEndIdx = -1;
+        for (let i = 0; i < words.length; i++) {
+            if (isAux(words[i]) || (isVerb(words[i]) && !isAux(words[i])) || isVing(words[i]) || isBeen(words[i])) {
+                subjectEndIdx = i;
+                break;
+            }
+        }
+
+        let wordsConsumedForLine1 = 0;
+
+        if (subjectEndIdx > 0) { // Subject exists and is not the first word
+            for (let i = 0; i < subjectEndIdx; i++) line1Words.push(words[i]);
+            wordsConsumedForLine1 = subjectEndIdx;
+
+            if (wordsConsumedForLine1 < words.length && isAux(words[wordsConsumedForLine1])) {
+                line1Words.push(words[wordsConsumedForLine1]);
+                wordsConsumedForLine1++;
+            }
+
+            let verbAddedToLine1 = false;
+            if (wordsConsumedForLine1 < words.length && (isVerb(words[wordsConsumedForLine1]) || isVing(words[wordsConsumedForLine1]) || isBeen(words[wordsConsumedForLine1]))) {
+                let addVerb = true;
+                if (line1Words.length > subjectEndIdx && line1Words.length > 0) {
+                    const lastWordInL1 = line1Words[line1Words.length - 1].toLowerCase().replace(/[^a-z0-9']/g, '');
+                    const currentVerbCandidate = words[wordsConsumedForLine1].toLowerCase().replace(/[^a-z0-9']/g, '');
+                    if (lastWordInL1 === currentVerbCandidate && isAux(words[wordsConsumedForLine1])) {
+                        addVerb = false;
+                    }
+                }
+                if (addVerb) {
+                    line1Words.push(words[wordsConsumedForLine1]);
+                    verbAddedToLine1 = true;
+                }
+                wordsConsumedForLine1++;
+            }
+
+            // Add Object (1 word) if a verb was added AND a next word exists
+            if (verbAddedToLine1 && wordsConsumedForLine1 < words.length) {
+                line1Words.push(words[wordsConsumedForLine1]);
+                wordsConsumedForLine1++;
+            }
+            line2Words = words.slice(wordsConsumedForLine1);
+
+        } else if (subjectEndIdx === 0 && words.length > 0) { // Sentence starts with Aux/Verb
+            line1Words.push(words[0]);
+            wordsConsumedForLine1 = 1;
+            let verbAddedToLine1 = (isVerb(words[0]) && !isAux(words[0])) || isVing(words[0]) || isBeen(words[0]);
+
+            if (wordsConsumedForLine1 < words.length && isAux(words[0]) && (isVerb(words[wordsConsumedForLine1]) || isVing(words[wordsConsumedForLine1]) || isBeen(words[wordsConsumedForLine1])) && !isAux(words[wordsConsumedForLine1])) {
+                line1Words.push(words[wordsConsumedForLine1]);
+                verbAddedToLine1 = true;
+                wordsConsumedForLine1++;
+            }
+
+            if (verbAddedToLine1 && wordsConsumedForLine1 < words.length && line1Words.length < 3 ) {
+                 line1Words.push(words[wordsConsumedForLine1]);
+                 wordsConsumedForLine1++;
+            }
+            line2Words = words.slice(wordsConsumedForLine1);
+
+        } else { // Fallback
+            const half = Math.max(1, Math.ceil(words.length / 2));
+            line1Words = words.slice(0, half);
+            wordsConsumedForLine1 = line1Words.length;
+            line2Words = words.slice(wordsConsumedForLine1);
+        }
+    }
+
+    if (words.length <= 4 && originalSentenceForShortCheck.length < 35) {
+        line1Words = words.slice();
+        line2Words = [];
+    } else if (line1Words.length === 0 && words.length > 0) {
+        line1Words = [words[0]];
+        line2Words = words.slice(1);
+    }
+
+    return [line1Words.join(" "), line2Words.join(" ").trim()];
+}
+// =======================================================================
+// END OF MODIFIED splitSentence FUNCTION
+// =======================================================================
+
 
 function drawSingleSentenceBlock(sentenceObject, baseY, isQuestionBlock, blockContext) {
     if (!sentenceObject) return { lastY: baseY, wordRects: [] };
@@ -1000,13 +1116,40 @@ function drawSingleSentenceBlock(sentenceObject, baseY, isQuestionBlock, blockCo
         const lineText = lines[i];
         let currentLineCenterY = yFirstLineTextCenter + i * LINE_HEIGHT;
 
+        // =======================================================================
+        // START OF USER REQUESTED LINE SPACING ADJUSTMENT
+        // =======================================================================
+        if (isQuestionBlock) {
+            if (i === 0) { // 첫 번째 문장(질문 블록)의 첫 번째 줄
+                currentLineCenterY -= 10;
+            }
+            // 질문 블록의 두 번째 줄은 첫 번째 줄이 위로 이동하고
+            // 표준 LINE_HEIGHT에 의해 자연스럽게 간격이 넓어집니다.
+            // 늘어난 간격을 만들기 위해 두 번째 줄 자체에 대한 명시적인 +10px 조정은 필요하지 않습니다.
+        } else { // 두 번째 문장(답변 블록)
+            if (i === 1) { // 답변 블록의 두 번째 줄
+                currentLineCenterY += 10;
+            }
+        }
+        // =======================================================================
+        // END OF USER REQUESTED LINE SPACING ADJUSTMENT
+        // =======================================================================
+
         const words = lineText.split(" ");
         let wordMetrics = words.map(w => ctx.measureText(w));
-        let spaceWidth = ctx.measureText(" ").width;
-        let totalLineWidth = wordMetrics.reduce((sum, m) => sum + m.width, 0) + spaceWidth * (words.length - 1);
+
+        // --- START: 단어 간 간격 20% 증가 ---
+        const originalSpaceWidth = ctx.measureText(" ").width;
+        const adjustedSpaceWidth = originalSpaceWidth * 1.20;
+        // --- END: 단어 간 간격 20% 증가 ---
+
+        // Calculate total line width using the *adjusted* space width for centering
+        let totalLineWidth = wordMetrics.reduce((sum, m) => sum + m.width, 0);
+        if (words.length > 1) {
+            totalLineWidth += adjustedSpaceWidth * (words.length - 1);
+        }
 
         let currentX = (canvas.width - totalLineWidth) / 2;
-
         const wordHeight = parseFloat(englishFont.match(/(\d*\.?\d*)px/)[1]);
 
         for (let j = 0; j < words.length; j++) {
@@ -1040,9 +1183,20 @@ function drawSingleSentenceBlock(sentenceObject, baseY, isQuestionBlock, blockCo
                 isQuestionWord: isQuestionBlock
             });
 
-            currentX += measuredWidth + spaceWidth;
+            // Use the *adjusted* space width for advancing X
+            if (j < words.length - 1) { // Only add space if it's not the last word
+                currentX += measuredWidth + adjustedSpaceWidth;
+            } else {
+                currentX += measuredWidth;
+            }
         }
         lastDrawnTextBottomY = currentLineCenterY + LINE_HEIGHT / 2;
+         if (isQuestionBlock && i === 0) {
+            lastDrawnTextBottomY -=10;
+        } else if (!isQuestionBlock && i === 1) {
+            lastDrawnTextBottomY +=10;
+        }
+
     }
     return { lastY: lastDrawnTextBottomY, wordRects: localWordRects };
 }
@@ -1051,7 +1205,7 @@ function drawSingleSentenceBlock(sentenceObject, baseY, isQuestionBlock, blockCo
 function drawPlayButton(buttonRect, baseScaleForOriginalSize) {
     if (!buttonRect) return;
 
-    const visualShrinkFactor = 0.8;
+    const visualShrinkFactor = 0.72;
     const visualWidth = buttonRect.w * visualShrinkFactor;
     const visualHeight = buttonRect.h * visualShrinkFactor;
     const visualX = buttonRect.x + (buttonRect.w - visualWidth) / 2;
@@ -1101,7 +1255,7 @@ function drawCenterSentence() {
     ctx.globalAlpha = centerAlpha;
 
     const mainRenderAreaYCenter = topOffset + (canvas.height - topOffset) / 2;
-    const questionBlockCenterY = mainRenderAreaYCenter + SENTENCE_VERTICAL_ADJUSTMENT; // This uses the updated constant
+    const questionBlockCenterY = mainRenderAreaYCenter + SENTENCE_VERTICAL_ADJUSTMENT;
 
     let questionBlockContext = { verbColored: false };
     let questionDrawOutput = { lastY: questionBlockCenterY - LINE_HEIGHT, wordRects: [] };
@@ -1115,14 +1269,19 @@ function drawCenterSentence() {
     const btnX = 10;
 
     if (currentQuestionSentence) {
-        const questionLinesForHeight = [currentQuestionSentence.line1, currentQuestionSentence.line2].filter(l => l && l.trim());
-        const questionBlockActualHeight = questionLinesForHeight.length * LINE_HEIGHT;
-        const questionFirstLineCenterY = questionBlockCenterY - questionBlockActualHeight / 2 + LINE_HEIGHT / 2;
-
         questionDrawOutput = drawSingleSentenceBlock(currentQuestionSentence, questionBlockCenterY, true, questionBlockContext);
         centerSentenceWordRects.push(...questionDrawOutput.wordRects);
 
-        playButtonRectQuestion = { x: btnX, y: questionFirstLineCenterY - btnH_forHitbox / 2, w: btnW_forHitbox, h: btnH_forHitbox };
+        let playButtonQuestionY = questionBlockCenterY - btnH_forHitbox / 2;
+        const questionLinesForHeight = [currentQuestionSentence.line1, currentQuestionSentence.line2].filter(l => l && l.trim());
+        if (questionLinesForHeight.length > 0) {
+            let actualFirstLineCenterY = questionBlockCenterY - (questionLinesForHeight.length * LINE_HEIGHT) / 2 + LINE_HEIGHT / 2;
+            if (questionLinesForHeight.length > 0) actualFirstLineCenterY -=10;
+            playButtonQuestionY = actualFirstLineCenterY - btnH_forHitbox / 2;
+        }
+
+
+        playButtonRectQuestion = { x: btnX, y: playButtonQuestionY, w: btnW_forHitbox, h: btnH_forHitbox };
         if (showPlayButtonQuestion) {
             drawPlayButton(playButtonRectQuestion, currentVisualScaleForHitbox);
         }
@@ -1148,12 +1307,11 @@ function drawCenterSentence() {
         let topYForAnswerBlock;
 
         if (currentQuestionSentence) {
-            topYForAnswerBlock = questionDrawOutput.lastY + ANSWER_OFFSET_Y; // This uses the updated constant
+            topYForAnswerBlock = questionDrawOutput.lastY + ANSWER_OFFSET_Y;
         } else {
-            // If there's no question, center the answer block similarly to how question block would be centered
-            // but take into account it's an answer (so no SENTENCE_VERTICAL_ADJUSTMENT, or a modified one)
-            // For now, let's keep it simple and assume question always exists or this part of logic might need review for standalone answers
-            topYForAnswerBlock = mainRenderAreaYCenter - (answerBlockHeight / 2); // Simplified centering for standalone answer
+            let effectiveCenterY = mainRenderAreaYCenter;
+            if (answerLines.length === 2) effectiveCenterY -= 10 / 2;
+             topYForAnswerBlock = effectiveCenterY - (answerBlockHeight / 2);
         }
 
         const answerFirstLineCenterY = topYForAnswerBlock + LINE_HEIGHT / 2;
@@ -1216,7 +1374,7 @@ function drawCenterSentence() {
 function drawFireworks() {
   if (!fireworks) return;
   ctx.save();
-  ctx.font = "23.52px Arial";
+  ctx.font = englishFont;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
@@ -1229,107 +1387,6 @@ function drawFireworks() {
   ctx.restore();
 }
 
-function splitSentence(sentenceText, isCurrentlyQuestion = null) {
-    if (!sentenceText) return ["", ""];
-    const words = sentenceText.trim().split(" ");
-    const originalSentenceForShortCheck = sentenceText.trim();
-
-    const isEffectiveQuestionType = (isCurrentlyQuestion !== null) ? isCurrentlyQuestion : originalSentenceForShortCheck.endsWith('?');
-
-    if (words.length <= 4 && originalSentenceForShortCheck.length < 35) {
-        return [originalSentenceForShortCheck, ""];
-    }
-
-    let line1Words = [];
-    let line2Words = [];
-
-    if (isEffectiveQuestionType) {
-        if (words.length > 0) {
-            if (isWh(words[0])) {
-                line1Words.push(words[0]);
-                if (words.length > 1 && isAux(words[1])) {
-                    line1Words.push(words[1]);
-                    if (words.length > 2) {
-                        line1Words.push(words[2]);
-                    }
-                } else if (words.length > 1) {
-                    line1Words.push(words[1]);
-                }
-            } else if (isAux(words[0])) {
-                line1Words.push(words[0]);
-                if (words.length > 1) {
-                    line1Words.push(words[1]);
-                }
-            }
-        }
-
-        if (line1Words.length > 0 && line1Words.length < words.length) {
-            line2Words = words.slice(line1Words.length);
-        } else if (line1Words.length === words.length && line1Words.length > 0) {
-            line2Words = [];
-        } else {
-            const half = Math.ceil(words.length / 2);
-            line1Words = words.slice(0, half > 0 ? half : (words.length > 0 ? 1 : 0) );
-            line2Words = words.slice(line1Words.length);
-        }
-
-    } else { // Answer sentence
-        let subjectEndIndex = -1;
-        for (let i = 0; i < words.length; i++) {
-            const currentWordClean = words[i].toLowerCase().replace(/[^a-z0-9']/g, '');
-            if (isAux(currentWordClean) || isVerb(currentWordClean) || isVing(currentWordClean) || isBeen(currentWordClean)) {
-                subjectEndIndex = i;
-                break;
-            }
-        }
-
-        if (subjectEndIndex === -1 && words.length > 0) {
-            subjectEndIndex = words.length;
-        }
-
-
-        if (subjectEndIndex >= 0) {
-            line1Words = words.slice(0, subjectEndIndex);
-            let currentIndex = subjectEndIndex;
-
-            if (currentIndex < words.length && isAux(words[currentIndex])) {
-                line1Words.push(words[currentIndex]);
-                currentIndex++;
-            }
-
-            if (currentIndex < words.length && (isVerb(words[currentIndex]) || isVing(words[currentIndex]) || isBeen(words[currentIndex]))) {
-                let alreadyAddedAsAux = false;
-                if (line1Words.length > subjectEndIndex) {
-                    const lastWordInL1 = line1Words[line1Words.length - 1];
-                    if (lastWordInL1.toLowerCase().replace(/[^a-z0-9']/g, '') === words[currentIndex].toLowerCase().replace(/[^a-z0-9']/g, '') && isAux(lastWordInL1)) {
-                        alreadyAddedAsAux = true;
-                    }
-                }
-                if (!alreadyAddedAsAux) {
-                    line1Words.push(words[currentIndex]);
-                }
-            }
-        }
-
-        if (line1Words.length > 0 && line1Words.length < words.length) {
-            line2Words = words.slice(line1Words.length);
-        } else if (line1Words.length === words.length && line1Words.length > 0) {
-            line2Words = [];
-        } else {
-            const half = Math.ceil(words.length / 2);
-            line1Words = words.slice(0, half > 0 ? half : (words.length > 0 ? 1 : 0) );
-            line2Words = words.slice(line1Words.length);
-        }
-    }
-
-    if (line1Words.length === 0 && words.length > 0) {
-        const half = Math.max(1, Math.ceil(words.length / 2));
-        line1Words = words.slice(0, half);
-        line2Words = words.slice(half);
-    }
-
-    return [line1Words.join(" "), line2Words.join(" ").trim()];
-}
 
 function getClockwiseAngle(index, total) {
   return -Math.PI / 2 + (index * 2 * Math.PI) / total;
@@ -1404,12 +1461,25 @@ function startFireworks(sentenceTextForFireworks, globalSentenceIndex, explosion
         if (roleOfNewSentence === 'question') {
             const qBlockFinalCenterY = mainRenderAreaYCenter + SENTENCE_VERTICAL_ADJUSTMENT;
             wordTargetY = qBlockFinalCenterY - sentenceBlockFinalHeight_fw / 2 + (wordsForFireworks[j].row * LINE_HEIGHT) + (LINE_HEIGHT / 2);
+            if (wordsForFireworks[j].row === 0) {
+                wordTargetY -= 10;
+            }
         } else {
             const [qTextL1_layout, qTextL2_layout] = splitSentence(questionTextForLayout, true);
             const qTextLines_layout = [qTextL1_layout, qTextL2_layout].filter(l => l && l.trim());
-            const questionBlockActualHeight_layout = qTextLines_layout.length * LINE_HEIGHT;
+
+            let questionBlockActualHeight_layout = qTextLines_layout.length * LINE_HEIGHT;
+            if (qTextLines_layout.length === 2) questionBlockActualHeight_layout +=10;
+
+
             const questionBlockActualCenterY_layout = mainRenderAreaYCenter + SENTENCE_VERTICAL_ADJUSTMENT;
-            const questionBlockActualBottomY_layout = questionBlockActualCenterY_layout + questionBlockActualHeight_layout / 2;
+            let questionBlockActualBottomY_layout = questionBlockActualCenterY_layout + questionBlockActualHeight_layout / 2;
+            if (qTextLines_layout.length === 1) {
+                 questionBlockActualBottomY_layout -= 10;
+            } else if (qTextLines_layout.length === 0) {
+                 questionBlockActualBottomY_layout = questionBlockActualCenterY_layout;
+            }
+
 
             let answerBlockFinalTopY_fw;
             if (qTextLines_layout.length > 0) {
@@ -1418,6 +1488,9 @@ function startFireworks(sentenceTextForFireworks, globalSentenceIndex, explosion
                 answerBlockFinalTopY_fw = questionBlockActualCenterY_layout - sentenceBlockFinalHeight_fw / 2;
             }
             wordTargetY = answerBlockFinalTopY_fw + (wordsForFireworks[j].row * LINE_HEIGHT) + (LINE_HEIGHT / 2);
+            if (wordsForFireworks[j].row === 1) {
+                wordTargetY += 10;
+            }
         }
 
         fireworks.push({
@@ -1468,18 +1541,35 @@ function updateFireworks() {
     if(sentenceLine1Gather.trim()) sentenceLineWordArrays.push(sentenceLine1Gather.split(" "));
     if(sentenceLine2Gather.trim()) sentenceLineWordArrays.push(sentenceLine2Gather.split(" "));
 
+    // --- START: 단어 간 간격 20% 증가 적용 (불꽃놀이 효과용) ---
+    const originalSpaceWidthFireworks = tempCtx.measureText(" ").width;
+    const adjustedSpaceWidthFireworks = originalSpaceWidthFireworks * 1.20;
+    // --- END: 단어 간 간격 20% 증가 적용 (불꽃놀이 효과용) ---
+
     let wordIndexInFireworks = 0;
     for (let i = 0; i < sentenceLineWordArrays.length; i++) {
         const wordsInLine = sentenceLineWordArrays[i];
         let wordMetrics = wordsInLine.map(w => tempCtx.measureText(w));
-        let spaceWidth = tempCtx.measureText(" ").width;
-        let totalLineWidth = wordMetrics.reduce((sum, m) => sum + m.width, 0) + spaceWidth * (wordsInLine.length - 1);
-        let currentXTargetForLineStart = (canvas.width - totalLineWidth) / 2;
+
+        // Calculate total line width using the *adjusted* space width for centering
+        let currentLineTotalWidth = 0;
+        for(let k=0; k < wordMetrics.length; k++) {
+            currentLineTotalWidth += wordMetrics[k].width;
+            if (k < wordMetrics.length - 1) { // Only add space if not the last word
+                currentLineTotalWidth += adjustedSpaceWidthFireworks;
+            }
+        }
+
+        let currentXTargetForWord = (canvas.width - currentLineTotalWidth) / 2;
 
         for (let j = 0; j < wordsInLine.length; j++) {
             if (fireworks[wordIndexInFireworks]) {
-                const wordStartTargetX = currentXTargetForLineStart + wordMetrics.slice(0, j).reduce((sum, m) => sum + m.width + spaceWidth, 0);
-                fireworks[wordIndexInFireworks].targetX = wordStartTargetX;
+                fireworks[wordIndexInFireworks].targetX = currentXTargetForWord; // Set start X of the word
+                // Advance X for the next word
+                currentXTargetForWord += wordMetrics[j].width;
+                if (j < wordsInLine.length - 1) {
+                    currentXTargetForWord += adjustedSpaceWidthFireworks;
+                }
             }
             wordIndexInFireworks++;
         }
@@ -1487,6 +1577,7 @@ function updateFireworks() {
 
     fireworks.forEach((fw) => {
       const wordWidth = tempCtx.measureText(fw.text).width;
+      // fw.targetX is already the start of the word, so for centering text, add half its width
       const centeredTargetX = fw.targetX + wordWidth / 2;
       fw.x += (centeredTargetX - fw.x) * ease * 0.2;
       fw.y += (fw.targetY - fw.y) * ease * 0.2;
@@ -1573,7 +1664,7 @@ function spawnEnemy() {
     enemy.flutterAngle = Math.random() * Math.PI * 2;
     enemy.flutterSpeed = Math.random() * 5 + 3;
     enemy.flutterAmplitude = Math.random() * 3 + 3;
-  } else if (idx === 2) { // Cosmos Flower
+  } else if (idx === 2) { // Cosmos
     enemy.rotationSpeed = (Math.random() * 0.8 + 0.4) * (Math.random() > 0.5 ? 1 : -1);
     enemy.driftXPerSecond = (Math.random() - 0.5) * 20;
     enemy.swayAngle = Math.random() * Math.PI * 2;
@@ -1606,7 +1697,9 @@ function spawnEnemy() {
 
 function update(delta) {
   enemies = enemies.filter(e => e.y <= canvas.height + e.h);
-  while (enemies.length < 2) spawnEnemy();
+  while (enemies.length < 2) {
+    spawnEnemy();
+  }
 
   enemies.forEach(e => {
     const deltaTimeSeconds = delta / 1000.0;
@@ -1615,14 +1708,14 @@ function update(delta) {
     let newX = e.x;
     let newY = e.baseY;
 
-    if (e.imgIndex === 3) { // Maple Leaf
+    if (e.imgIndex === 3) {
       e.initialX += e.driftXPerSecond * deltaTimeSeconds;
       e.swayAngle += e.swaySpeed * deltaTimeSeconds;
       newX = e.initialX + Math.sin(e.swayAngle) * e.swayAmplitude;
       e.rotation = Math.sin(e.swayAngle * 0.7) * 0.7;
       e.flutterAngle += e.flutterSpeed * deltaTimeSeconds;
       newY = e.baseY + Math.sin(e.flutterAngle) * e.flutterAmplitude;
-    } else if (e.imgIndex === 2) { // Cosmos Flower
+    } else if (e.imgIndex === 2) {
       e.initialX += e.driftXPerSecond * deltaTimeSeconds;
       e.rotation += e.rotationSpeed * deltaTimeSeconds;
       e.swayAngle += e.swaySpeed * deltaTimeSeconds;
@@ -1657,6 +1750,7 @@ function update(delta) {
   });
   detachedPetals = detachedPetals.filter(p => p.y <= canvas.height + p.h);
 
+
   enemyBullets = enemyBullets.filter(b => b.y < canvas.height).map(b => { b.y += b.speed; return b; });
 
   bullets.forEach((b, bi) => {
@@ -1681,11 +1775,14 @@ function update(delta) {
             localStorage.setItem('sentenceIndex', sentenceIndex.toString());
             sounds.explosion.play();
         }
-        enemies.splice(ei, 1); bullets.splice(bi, 1);
+        enemies.splice(ei, 1);
+        bullets.splice(bi, 1);
       }
     });
   });
-  if (sentenceActive) updateFireworks();
+  if (sentenceActive) {
+    updateFireworks();
+  }
 
   if (!currentQuestionSentence && !currentAnswerSentence && !sentenceActive) {
     showPlayButton = false; showPlayButtonQuestion = false;
@@ -1699,13 +1796,8 @@ function update(delta) {
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // --- START: 배경 그리기 (검은색) ---
   ctx.fillStyle = 'black';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  // --- END: 배경 그리기 ---
-
-
   ctx.drawImage(playerImg, player.x, player.y, player.w, player.h);
 
   enemies.forEach(e => {
@@ -1757,9 +1849,7 @@ function draw() {
       const tempAnswerSentence = currentAnswerSentence;
       const tempAnswerIndex = currentAnswerSentenceIndex;
       currentAnswerSentence = null; currentAnswerSentenceIndex = null;
-
       drawCenterSentence();
-
       currentAnswerSentence = tempAnswerSentence;
       currentAnswerSentenceIndex = tempAnswerIndex;
     }
@@ -1774,7 +1864,7 @@ function draw() {
 
   if (!sentenceActive) centerAlpha = 1.0;
   else if (fireworksState && fireworksState.phase === "gather") {
-      // Alpha handled by gather
+      // Alpha is managed by gather phase
   } else centerAlpha = previousGlobalCenterAlpha;
 }
 
@@ -1807,13 +1897,18 @@ function resetGameStateForStartStop() {
     if (activeWordTranslation) activeWordTranslation.show = false;
     activeWordTranslation = null;
     if (wordTranslationTimeoutId) { clearTimeout(wordTranslationTimeoutId); wordTranslationTimeoutId = null; }
-    centerSentenceWordRects = []; isActionLocked = false;
+    centerSentenceWordRects = [];
+    isActionLocked = false;
 }
 
 function startGame() {
   calculateTopOffset();
   if (!allAssetsReady) {
-    alert("이미지 및 비디오 로딩 중입니다. 잠시 후 다시 시도하세요.");
+    console.warn("Assets not ready. Please wait and try starting again.");
+    ctx.fillStyle = "white";
+    ctx.font = "16px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("이미지 및 비디오 로딩 중... 잠시 후 다시 시도하세요.", canvas.width / 2, canvas.height / 2);
     return;
   }
   isGameRunning = true;
@@ -1848,15 +1943,11 @@ function startGame() {
   localStorage.setItem('sentenceIndex', sentenceIndex.toString());
 
   spawnEnemy(); spawnEnemy();
-
   player.x = canvas.width / 2 - PLAYER_SIZE / 2;
   player.y = topOffset + (canvas.height - topOffset) - PLAYER_SIZE - 10;
   player.y = Math.max(topOffset, player.y);
-
   lastTime = performance.now();
-
   getVoicesReliably().catch(err => console.error("startGame: Error during voice pre-warming:", err));
-
   requestAnimationFrame(gameLoop);
 }
 
@@ -1943,8 +2034,8 @@ function handleCanvasInteraction(clientX, clientY, event) {
 
     if ((currentQuestionSentence || currentAnswerSentence) && centerSentenceWordRects.length > 0) {
         for (const wordRect of centerSentenceWordRects) {
-          if (clientX >= wordRect.x && clientX <= wordRect.x + wordRect.w &&
-              clientY >= wordRect.y - wordRect.h / 2 && clientY <= wordRect.y + wordRect.h / 2 ) {
+          if (clientX >= (wordRect.x - expandedMargin/2) && clientX <= (wordRect.x + wordRect.w + expandedMargin/2) &&
+              clientY >= (wordRect.y - wordRect.h / 2 - expandedMargin/2) && clientY <= (wordRect.y + wordRect.h / 2 + expandedMargin/2) ) {
             window.speechSynthesis.cancel();
             speakWord(wordRect.word).catch(err => console.error(`Error speaking word "${wordRect.word}":`, err));
 
@@ -2022,7 +2113,7 @@ canvas.addEventListener('touchmove', e => {
     touch.clientY >= (playButtonRectQuestion.y - expandedMargin) && touch.clientY <= (playButtonRectQuestion.y + playButtonRectQuestion.h + expandedMargin);
   const isOverPlayBtnA = showPlayButton && playButtonRect &&
     touch.clientX >= (playButtonRect.x - expandedMargin) && touch.clientX <= (playButtonRect.x + playButtonRect.w + expandedMargin) &&
-    touch.clientY >= (playButtonRect.y - expandedMargin) && clientY <= (playButtonRect.y + playButtonRect.h + expandedMargin);
+    touch.clientY >= (playButtonRect.y - expandedMargin) && touch.clientY <= (playButtonRect.y + playButtonRect.h + expandedMargin); // Corrected clientY to touch.clientY
   let isOverWord = false;
   if ((currentQuestionSentence || currentAnswerSentence) && centerSentenceWordRects.length > 0) {
     for (const wordRect of centerSentenceWordRects) {
