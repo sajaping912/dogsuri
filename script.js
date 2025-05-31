@@ -290,10 +290,8 @@ async function playSentenceAudio(index) {
       reject(e);
     };
     
-    // "동시에" 요구사항을 위해 play() 호출 직후 resolve 고려 가능,
-    // 단, 실제 오디오 시작과는 미세한 차이 발생 가능. 여기서는 기존 로직 유지.
     currentSentenceAudio.play().then(() => {
-        // resolve(); // 즉시 resolve하고 싶다면 여기, 단 onended와 중복 주의
+        // resolve(); 
     }).catch(e => {
       console.error(`Failed to play ${audioFilePath}`, e);
       currentSentenceAudio = null;
@@ -1841,145 +1839,67 @@ function handleCanvasInteraction(clientX, clientY, event) {
       activeWordTranslation = null; isActionLocked = true;
       
       if (currentQuestionSentenceIndex !== null) {
-          window.speechSynthesis.cancel(); // Stop any other TTS
-
-          // --- START: Word Animation Trigger ---
-          if (currentQuestionSentence && (currentQuestionSentence.line1.trim() || currentQuestionSentence.line2.trim())) {
-              const firstLineText = currentQuestionSentence.line1.trim() ? currentQuestionSentence.line1 : currentQuestionSentence.line2;
-              const firstWordText = firstLineText.split(" ")[0];
-              const targetLineIndex = currentQuestionSentence.line1.trim() ? 0 : 1;
-
-              // Find the precise wordRect for the first word of the question
-              const firstWordRect = centerSentenceWordRects.find(rect =>
-                  rect.isQuestionWord &&
-                  rect.word === firstWordText &&
-                  rect.lineIndex === targetLineIndex &&
-                  ( (targetLineIndex === 0 && currentQuestionSentence.line1.startsWith(rect.word) && Math.abs(rect.x - playButtonRectQuestion.x - playButtonRectQuestion.w - 5) < 50 ) || // crude proximity check
-                    (targetLineIndex === 1 && currentQuestionSentence.line2.startsWith(rect.word) && Math.abs(rect.x - playButtonRectQuestion.x - playButtonRectQuestion.w - 5) < 50 ) ) &&
-                  // Ensure it's the first word by checking its x position relative to the start of the sentence block
-                  // This requires knowing the sentence block's start x, or assuming the first wordRect found with the text is correct.
-                  // For simplicity, we rely on the order from centerSentenceWordRects if multiple words are identical.
-                  // A more robust check would involve comparing rect.x with the calculated start x of the line.
-                  true // Placeholder for more robust check if needed
-              );
-              
-              // A simpler way to get the first wordRect of the question block
-              const questionWordRects = centerSentenceWordRects.filter(r => r.isQuestionWord);
-              if (questionWordRects.length > 0) {
-                  // Sort by lineIndex, then by x to be sure
-                  questionWordRects.sort((a,b) => {
-                      if (a.lineIndex !== b.lineIndex) return a.lineIndex - b.lineIndex;
-                      return a.x - b.x;
-                  });
-                   if (questionWordRects[0].word === firstWordText) { // Check if the first one matches the expected text
-                        startWordWaveAnimation(questionWordRects[0], ctx);
-                   } else { // Fallback if the very first rect isn't the one (e.g. empty line1)
-                        const specificFirstWordRect = questionWordRects.find(rect => rect.word === firstWordText && rect.lineIndex === targetLineIndex);
-                        if (specificFirstWordRect) startWordWaveAnimation(specificFirstWordRect, ctx);
-                   }
-              }
-          }
-          // --- END: Word Animation Trigger ---
+          window.speechSynthesis.cancel(); 
 
           playSentenceAudio(currentQuestionSentenceIndex)
               .catch(err => console.error("Error playing question sentence audio from play button:", err));
+
+          // --- START: Word Animation Trigger (지연 포함) ---
+          const AUX_ANIMATION_DELAY_QUESTION = 300; // 300ms (0.3초) 지연
+
+          setTimeout(() => {
+            if (!isGameRunning || isGamePaused || !currentQuestionSentence || currentQuestionSentenceIndex === null) {
+                return;
+            }
+
+            if (currentQuestionSentence && (currentQuestionSentence.line1.trim() || currentQuestionSentence.line2.trim())) {
+                const firstLineText = currentQuestionSentence.line1.trim() ? currentQuestionSentence.line1 : currentQuestionSentence.line2;
+                const firstWordText = firstLineText.split(" ")[0];
+                const targetLineIndex = currentQuestionSentence.line1.trim() ? 0 : 1;
+                
+                const questionWordRects = centerSentenceWordRects.filter(r => r.isQuestionWord);
+                if (questionWordRects.length > 0) {
+                    questionWordRects.sort((a,b) => {
+                        if (a.lineIndex !== b.lineIndex) return a.lineIndex - b.lineIndex;
+                        return a.x - b.x;
+                    });
+                     if (questionWordRects[0].word === firstWordText) { 
+                          startWordWaveAnimation(questionWordRects[0], ctx);
+                     } else { 
+                          const specificFirstWordRect = questionWordRects.find(rect => rect.word === firstWordText && rect.lineIndex === targetLineIndex);
+                          if (specificFirstWordRect) startWordWaveAnimation(specificFirstWordRect, ctx);
+                     }
+                }
+            }
+          }, AUX_ANIMATION_DELAY_QUESTION);
+          // --- END: Word Animation Trigger (지연 포함) ---
       }
       event.preventDefault(); setTimeout(() => { isActionLocked = false; }, 200); return;
     }
+
+    // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+    // 답변 문장 플레이 버튼 (isPlayBtnAnswerTouched) 로직 수정된 부분
+    // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
     if (isPlayBtnAnswerTouched) {
       showTranslationForAnswer = true; showTranslationForQuestion = false;
       if (activeWordTranslation) activeWordTranslation.show = false;
       if (wordTranslationTimeoutId) clearTimeout(wordTranslationTimeoutId);
-      activeWordTranslation = null; isActionLocked = true;
+      activeWordTranslation = null; 
+      isActionLocked = true; 
+
       if (currentAnswerSentenceIndex !== null) {
-          window.speechSynthesis.cancel();
+          window.speechSynthesis.cancel(); 
 
-          // --- START: 답변 문장 조동사 애니메이션 트리거 ---
-          if (currentAnswerSentence && (currentAnswerSentence.line1.trim() || currentAnswerSentence.line2.trim())) {
-              const fullAnswerText = (currentAnswerSentence.line1 + " " + currentAnswerSentence.line2).trim();
-              const wordsInAnswer = fullAnswerText.split(" ").filter(w => w.length > 0); // 빈 문자열이 있다면 제거
-
-              if (wordsInAnswer.length > 0) {
-                  let subjectEndIndex = -1; // 주어가 끝나는 단어의 인덱스 (0부터 시작)
-                  for (let i = 0; i < wordsInAnswer.length; i++) {
-                      // 동사, 조동사, V-ing, been 등이 나오기 직전까지를 주어로 간주
-                      if (isAux(wordsInAnswer[i]) ||
-                          (isVerb(wordsInAnswer[i]) && !isAux(wordsInAnswer[i])) || // 순수 동사 (조동사 형태가 아닌 경우)
-                          isVing(wordsInAnswer[i]) ||
-                          isBeen(wordsInAnswer[i])) {
-                          subjectEndIndex = i - 1;
-                          break;
-                      }
-                      // 문장 끝까지 동사/조동사 등이 안 나오면, 문장 전체가 주어이거나 (가능성 낮음)
-                      // 마지막 단어까지 주어 부분일 수 있음 (예: "The big brown fox")
-                      if (i === wordsInAnswer.length - 1) {
-                          subjectEndIndex = i;
-                      }
-                  }
-
-                  let auxWordForAnimation = null;
-                  let auxWordGlobalIndexInAnswer = -1; // 전체 답변 문장(공백제거 단어배열 기준)에서 조동사의 인덱스
-
-                  // 주어가 식별되었고 (subjectEndIndex >= 0), 주어 다음 단어가 문장 내에 존재하며, 그 단어가 조동사인 경우
-                  if (subjectEndIndex >= 0 && (subjectEndIndex + 1) < wordsInAnswer.length) {
-                      const potentialAux = wordsInAnswer[subjectEndIndex + 1];
-                      if (isAux(potentialAux)) {
-                          auxWordForAnimation = potentialAux;
-                          auxWordGlobalIndexInAnswer = subjectEndIndex + 1;
-                      }
-                  }
-
-                  if (auxWordForAnimation && auxWordGlobalIndexInAnswer !== -1) {
-                      // 화면에 그려진 단어들 중 답변 문장에 해당하는 것들을 가져와 순서대로 정렬
-                      const answerWordRectsOrdered = centerSentenceWordRects
-                          .filter(r => !r.isQuestionWord) // 답변 문장 단어만
-                          .sort((a, b) => { // 화면상 표시 순서대로 정렬 (줄 -> x좌표)
-                              if (a.lineIndex !== b.lineIndex) return a.lineIndex - b.lineIndex;
-                              return a.x - b.x;
-                          });
-
-                      // 정렬된 단어 목록에서 해당 인덱스의 wordRect가 실제 애니메이션 대상인지 확인
-                      if (answerWordRectsOrdered.length > auxWordGlobalIndexInAnswer) {
-                          const targetWordRectCandidate = answerWordRectsOrdered[auxWordGlobalIndexInAnswer];
-                          
-                          // 단어 텍스트도 일치하는지 최종 확인 (구두점 등 정제 후 비교)
-                          const candidateTextClean = targetWordRectCandidate.word.replace(/[^a-zA-Z0-9']/g, "").toLowerCase();
-                          const auxWordTextClean = auxWordForAnimation.replace(/[^a-zA-Z0-9']/g, "").toLowerCase();
-
-                          if (candidateTextClean === auxWordTextClean) {
-                              startWordWaveAnimation(targetWordRectCandidate, ctx);
-                          }
-                      }
-                  }
-              }
-          }
-          // --- END: 답변 문장 조동사 애니메이션 트리거 ---
           playSentenceAudio(currentAnswerSentenceIndex)
               .catch(err => console.error("Error playing answer sentence audio from play button:", err));
 
-              if (isPlayBtnAnswerTouched) { // 답변 문장 플레이 버튼 터치 시
-      showTranslationForAnswer = true; showTranslationForQuestion = false;
-      if (activeWordTranslation) activeWordTranslation.show = false;
-      if (wordTranslationTimeoutId) clearTimeout(wordTranslationTimeoutId);
-      activeWordTranslation = null; isActionLocked = true;
-
-      if (currentAnswerSentenceIndex !== null) {
-          window.speechSynthesis.cancel(); // 혹시 모를 다른 TTS 음성 중지
-
-          // 1. 오디오 재생을 먼저 시작합니다.
-          playSentenceAudio(currentAnswerSentenceIndex)
-              .catch(err => console.error("Error playing answer sentence audio from play button:", err));
-
-          // 2. 지정된 시간만큼 지연 후 조동사 애니메이션을 시작합니다.
-          const AUX_ANIMATION_DELAY = 600; // 600ms (0.6초) 지연. 이 값을 500~800 사이로 조절하여 테스트하세요.
+          const AUX_ANIMATION_DELAY = 300; // 수정된 지연 시간 (기존 600ms에서 300ms로 단축)
 
           setTimeout(() => {
-            // 지연 시간 후, 게임이 여전히 실행 중이고 일시정지가 아니며, 해당 답변 문장이 유효할 때만 애니메이션 실행
             if (!isGameRunning || isGamePaused || !currentAnswerSentence || currentAnswerSentenceIndex === null) {
                 return;
             }
 
-            // --- START: 기존 조동사 애니메이션 로직 ---
             if (currentAnswerSentence.line1.trim() || currentAnswerSentence.line2.trim()) {
                 const fullAnswerText = (currentAnswerSentence.line1 + " " + currentAnswerSentence.line2).trim();
                 const wordsInAnswer = fullAnswerText.split(" ").filter(w => w.length > 0);
@@ -2030,28 +1950,25 @@ function handleCanvasInteraction(clientX, clientY, event) {
                     }
                 }
             }
-            // --- END: 기존 조동사 애니메이션 로직 ---
-
           }, AUX_ANIMATION_DELAY);
       }
       event.preventDefault(); 
-      // isActionLocked 해제 타이밍은 애니메이션 지연 시간과 별개로 기존 로직 유지
       setTimeout(() => { isActionLocked = false; }, 200); 
-      return;
+      return; 
     }
-      }
-      event.preventDefault(); setTimeout(() => { isActionLocked = false; }, 200); return;
-    }
-    // Word touch interaction
+    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+    // 답변 문장 플레이 버튼 (isPlayBtnAnswerTouched) 로직 수정 끝
+    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
     if ((currentQuestionSentence || currentAnswerSentence) && centerSentenceWordRects.length > 0) {
         for (const wordRect of centerSentenceWordRects) {
           if (clientX >= (wordRect.x - expandedMargin/2) && clientX <= (wordRect.x + wordRect.w + expandedMargin/2) &&
               clientY >= (wordRect.y - wordRect.h / 2 - expandedMargin/2) && clientY <= (wordRect.y + wordRect.h / 2 + expandedMargin/2) ) {
-            window.speechSynthesis.cancel(); // Stop sentence audio if a word is clicked
+            window.speechSynthesis.cancel(); 
             speakWord(wordRect.word).catch(err => console.error(`Error speaking word "${wordRect.word}":`, err));
             if (wordTranslationTimeoutId) clearTimeout(wordTranslationTimeoutId);
             if (activeWordTranslation) activeWordTranslation.show = false;
-            activeWordTranslation = null; isActionLocked = true; // Lock action
+            activeWordTranslation = null; isActionLocked = true; 
             getWordTranslation(wordRect.word).then(translation => {
                 activeWordTranslation = {
                     word: wordRect.word, translation: translation, x: wordRect.x, y: wordRect.y,
@@ -2062,25 +1979,23 @@ function handleCanvasInteraction(clientX, clientY, event) {
                     if (activeWordTranslation && activeWordTranslation.word === wordRect.word) activeWordTranslation.show = false;
                 }, WORD_TRANSLATION_DURATION);
             }).catch(err => console.error("Error getting word translation:", err));
-            showTranslationForQuestion = false; showTranslationForAnswer = false; // Hide full translations
+            showTranslationForQuestion = false; showTranslationForAnswer = false; 
             event.preventDefault(); setTimeout(() => { isActionLocked = false; }, 300); return;
           }
         }
     }
   }
 
-  // Player movement and shooting if no UI element was touched above
   player.x = clientX - player.w / 2;
   if (event.type === 'touchstart' || event.type === 'touchmove') player.y = clientY - player.h / 2 - PLAYER_TOUCH_Y_OFFSET;
-  else player.y = clientY - player.h / 2; // Mouse Y position
+  else player.y = clientY - player.h / 2; 
   player.x = Math.max(0, Math.min(canvas.width - player.w, player.x));
-  player.y = Math.max(topOffset, Math.min(canvas.height - player.h, player.y)); // Clamp player Y
-  // If player moved, hide any active word translation
+  player.y = Math.max(topOffset, Math.min(canvas.height - player.h, player.y)); 
   if (activeWordTranslation && activeWordTranslation.show) {
     activeWordTranslation.show = false;
     if (wordTranslationTimeoutId) { clearTimeout(wordTranslationTimeoutId); wordTranslationTimeoutId = null; }
   }
-  showTranslationForQuestion = false; showTranslationForAnswer = false; // Hide full translations on move/shoot
+  showTranslationForQuestion = false; showTranslationForAnswer = false; 
 
   const size = MIN_BUBBLE_SIZE + Math.random() * (MAX_BUBBLE_SIZE - MIN_BUBBLE_SIZE);
   const spawnX = player.x + player.w / 2 - size / 2;
@@ -2094,7 +2009,7 @@ function handleCanvasInteraction(clientX, clientY, event) {
     driftXPerSecond: (Math.random() - 0.5) * 2 * BUBBLE_HORIZONTAL_DRIFT_PPS_MAX,
   });
   sounds.shoot.play();
-  event.preventDefault(); // Prevent default browser actions like scrolling
+  event.preventDefault(); 
 }
 
 canvas.addEventListener('touchstart', e => {
@@ -2106,12 +2021,9 @@ canvas.addEventListener('mousedown', e => {
   handleCanvasInteraction(e.clientX, e.clientY, e);
 });
 
-// Touchmove and Mousemove: Only move player, do not shoot or trigger UI.
-// Prevents accidental UI interaction while dragging player.
 canvas.addEventListener('touchmove', e => {
   if (!isGameRunning || isGamePaused) return;
   const touch = e.touches[0];
-  // Check if touch is over any interactive UI element; if so, don't move player.
   const isOverPlayBtnQ = showPlayButtonQuestion && playButtonRectQuestion &&
     touch.clientX >= (playButtonRectQuestion.x - expandedMargin) && touch.clientX <= (playButtonRectQuestion.x + playButtonRectQuestion.w + expandedMargin) &&
     touch.clientY >= (playButtonRectQuestion.y - expandedMargin) && touch.clientY <= (playButtonRectQuestion.y + playButtonRectQuestion.h + expandedMargin);
@@ -2121,24 +2033,23 @@ canvas.addEventListener('touchmove', e => {
   let isOverWord = false;
   if ((currentQuestionSentence || currentAnswerSentence) && centerSentenceWordRects.length > 0) {
     for (const wordRect of centerSentenceWordRects) {
-      if ( touch.clientX >= wordRect.x && touch.clientX <= wordRect.x + wordRect.w && // Use exact rect bounds for move-over check
+      if ( touch.clientX >= wordRect.x && touch.clientX <= wordRect.x + wordRect.w && 
            touch.clientY >= wordRect.y - wordRect.h/2 && touch.clientY <= wordRect.y + wordRect.h/2 ) {
         isOverWord = true; break;
       }
     }
   }
-  if (isOverPlayBtnQ || isOverPlayBtnA || isOverWord) { e.preventDefault(); return; } // Prevent player move if over UI
+  if (isOverPlayBtnQ || isOverPlayBtnA || isOverWord) { e.preventDefault(); return; } 
 
   player.x = touch.clientX - player.w / 2;
-  player.y = touch.clientY - player.h / 2 - PLAYER_TOUCH_Y_OFFSET; // Apply Y offset for touch
+  player.y = touch.clientY - player.h / 2 - PLAYER_TOUCH_Y_OFFSET; 
   player.x = Math.max(0, Math.min(canvas.width - player.w, player.x));
   player.y = Math.max(topOffset, Math.min(canvas.height - player.h, player.y));
   e.preventDefault();
 }, { passive: false });
 
 canvas.addEventListener('mousemove', e => {
-  if (!isGameRunning || isGamePaused || e.buttons !== 1) return; // Only move if left mouse button is pressed
-   // Check if mouse is over any interactive UI element; if so, don't move player.
+  if (!isGameRunning || isGamePaused || e.buttons !== 1) return; 
   const isOverPlayBtnQ = showPlayButtonQuestion && playButtonRectQuestion &&
       e.clientX >= (playButtonRectQuestion.x - expandedMargin) && e.clientX <= (playButtonRectQuestion.x + playButtonRectQuestion.w + expandedMargin) &&
       e.clientY >= (playButtonRectQuestion.y - expandedMargin) && e.clientY <= (playButtonRectQuestion.y + playButtonRectQuestion.h + expandedMargin);
@@ -2154,23 +2065,22 @@ canvas.addEventListener('mousemove', e => {
       }
     }
   }
-  if (isOverPlayBtnQ || isOverPlayBtnA || isOverWord) return; // Prevent player move if over UI
+  if (isOverPlayBtnQ || isOverPlayBtnA || isOverWord) return; 
 
   player.x = e.clientX - player.w / 2;
-  player.y = e.clientY - player.h / 2; // No Y offset for mouse
+  player.y = e.clientY - player.h / 2; 
   player.x = Math.max(0, Math.min(canvas.width - player.w, player.x));
   player.y = Math.max(topOffset, Math.min(canvas.height - player.h, player.y));
 });
 
 window.addEventListener('load', () => {
-    calculateTopOffset(); // Calculate initial offset on load
+    calculateTopOffset(); 
     let storedIndex = Number(localStorage.getItem('sentenceIndex') || 0);
     sentenceIndex = storedIndex % sentences.length;
     localStorage.setItem('sentenceIndex', sentenceIndex.toString());
     if (bgmFiles.length > 0) {
         console.log("BGM object initialized on load. Path: " + bgmAudio.src);
     }
-    // Pre-warm voices
     getVoicesReliably().then(voices => {
         if(voices.length > 0) console.log("Voices pre-warmed successfully.");
         else console.warn("Voices pre-warming done, but no voices found.");
