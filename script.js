@@ -1368,7 +1368,7 @@ function drawCenterSentence() {
             ctx.fillStyle = "#2E8B57"; // SeaGreen (어두운 녹색)
             ctx.shadowColor = "#111"; ctx.shadowBlur = 4;
             const translationTextHeight = parseFloat(translationFont.match(/(\d*\.?\d*)px/)[1]);
-            const translationBelowY = answerDrawOutput.lastY + 7 + translationTextHeight / 2; 
+            const translationBelowY = answerDrawOutput.lastY + 3 + translationTextHeight / 2; 
             ctx.fillText(translations[currentAnswerSentenceIndex], canvas.width / 2, translationBelowY);
             ctx.restore();
         }
