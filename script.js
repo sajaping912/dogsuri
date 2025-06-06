@@ -1037,6 +1037,11 @@ const SUBJECT_AUX_CLONE_OFFSET_X = 15; // 주어+조동사 복제본이 의문�
 let cloneCreatedForCurrentAnswer = false; // 현재 답변에서 복제본이 이미 생성되었는지 추적
 // --- END: 주어+조동사 복제본 관련 변수들 ---
 
+// --- START: 동사 복제본 관련 변수들 ---
+let verbClones = []; // 생성된 동사 복제본들을 저장
+// VERB_CLONE_OFFSET_X는 동적으로 계산됨 (adjustedSpaceWidth와 동일)
+// --- END: 동사 복제본 관련 변수들 ---
+
 // --- START: 바운스 애니메이션 관련 변수들 ---
 let activeBounceAnimations = []; // 활성 바운스 애니메이션들을 저장
 const BOUNCE_DURATION_UP = WORD_ANIM_DURATION_UP; // 올라가는 시간: 220ms (웨이브와 동일)
@@ -1128,13 +1133,21 @@ function updateWordAnimations(currentTime) { // Plural, as it updates all active
         console.log("  - Question index:", currentQuestionSentenceIndex);
         console.log("  - Clone word:", anim.wordText);
       }
-      
-      // 조동사가 정점(80% 지점)에 도달했을 때 주어+조동사 복제본 생성 (복제본 생성이 허용된 경우에만)
+        // 조동사가 정점(80% 지점)에 도달했을 때 주어+조동사 복제본 생성 (복제본 생성이 허용된 경우에만)
       if (anim.isAuxiliaryWord && !anim.cloneCreated && anim.enableCloneGeneration && !cloneCreatedForCurrentAnswer && t >= 0.8) {
         // 해당 조동사와 함께 애니메이션되는 주어 찾기
         const subjectAnimation = findSubjectAnimationForAux(anim);
         if (subjectAnimation) {
           createSubjectAuxClone(subjectAnimation, anim);
+          
+          // 질문 문장인 경우 동사 복제본도 함께 생성 (애니메이션 없이)
+          if (currentQuestionSentence && anim.targetWordRect.isQuestionWord) {
+            const verbWordRect = findVerbWordRectForQuestion();
+            if (verbWordRect) {
+              createVerbClone(verbWordRect);
+            }
+          }
+          
           anim.cloneCreated = true;
           cloneCreatedForCurrentAnswer = true; // 현재 답변에 대한 복제본 생성 완료 플래그 설정
         }
@@ -1216,12 +1229,13 @@ function updateQuestionWordClones(currentTime) {
   }
 }
 
-// 의문사 복제본을 수동으로 제거하는 함수 (주어+조동사 복제본도 함께 제거)
+// 의문사 복제본을 수동으로 제거하는 함수 (주어+조동사 복제본과 동사 복제본도 함께 제거)
 function clearQuestionWordClones() {
   console.log("🧹 Clearing question word clones - before:", questionWordClones.length, "clones");
   questionWordClones = [];
-  // 의문사 복제본이 사라질 때 주어+조동사 복제본도 동시에 제거
+  // 의문사 복제본이 사라질 때 주어+조동사 복제본과 동사 복제본도 동시에 제거
   clearSubjectAuxClones();
+  clearVerbClones();
   console.log("🧹 Question word clones cleared");
 }
 
@@ -1317,6 +1331,115 @@ function clearSubjectAuxClones() {
   subjectAuxClones = [];
 }
 
+// --- START: 동사 복제본 관련 함수들 ---
+
+// 동사 복제본 생성 함수 (부드러운 애니메이션으로 원본 위치에서 목표 위치로 이동)
+function createVerbClone(verbWordRect) {
+  if (!verbWordRect) return;
+  
+  // adjustedSpaceWidth를 동적으로 계산 (다른 단어들 간의 간격과 동일하게)
+  ctx.font = englishFont;
+  const originalSpaceWidth = ctx.measureText(" ").width;
+  const adjustedSpaceWidth = originalSpaceWidth * 1.20;
+  
+  // 주어+조동사 복제본이 있는 경우 그 끝 위치를 찾아서 adjustedSpaceWidth만큼 떨어뜨리기
+  let targetX = verbWordRect.x; // 기본값: 원본 동사 위치
+  let targetY = verbWordRect.y - CLONE_OFFSET_Y; // 의문사 복제본과 같은 높이
+  
+  if (subjectAuxClones.length > 0) {
+    const subjectAuxClone = subjectAuxClones[0]; // 첫 번째 주어+조동사 복제본 사용
+    if (subjectAuxClone.charPositions && subjectAuxClone.charPositions.length > 0) {
+      // 주어+조동사 복제본의 마지막 문자 위치 + 너비 + adjustedSpaceWidth
+      const lastChar = subjectAuxClone.charPositions[subjectAuxClone.charPositions.length - 1];
+      targetX = lastChar.x + lastChar.width + adjustedSpaceWidth;
+      targetY = subjectAuxClone.targetY; // 주어+조동사 복제본과 같은 높이
+    }
+  }
+  
+  const clone = {
+    word: verbWordRect.word,
+    originalX: verbWordRect.x, // 원본 동사의 실제 위치에서 시작
+    originalY: verbWordRect.y, // 원본 동사의 실제 위치에서 시작
+    targetX: targetX, // 목표 X 위치
+    targetY: targetY, // 목표 Y 위치
+    currentX: verbWordRect.x, // 현재 X 위치 (원본에서 시작)
+    currentY: verbWordRect.y, // 현재 Y 위치 (원본에서 시작)
+    charPositions: [],
+    createdTime: performance.now(),
+    animationPhase: 'moving_up', // 부드러운 이동 애니메이션 상태
+    alpha: 1.0
+  };
+  
+  // 동사 텍스트의 문자 위치 계산 (초기에는 원본 위치)
+  const letters = clone.word.split('');
+  let currentX = clone.originalX;
+  
+  letters.forEach((char) => {
+    const charWidth = ctx.measureText(char).width;
+    clone.charPositions.push({
+      char: char,
+      x: currentX,
+      originalY: clone.originalY,
+      currentY: clone.originalY,
+      width: charWidth
+    });
+    currentX += charWidth;
+  });
+  
+  verbClones.push(clone);
+  console.log("✅ Verb clone created with smooth animation:", clone.word, "from", verbWordRect.x, verbWordRect.y, "to", targetX, targetY);
+}
+
+// 동사 복제본 업데이트 함수 (부드러운 애니메이션 처리)
+function updateVerbClones(currentTime) {
+  for (let i = verbClones.length - 1; i >= 0; i--) {
+    const clone = verbClones[i];
+    const elapsedTime = currentTime - clone.createdTime;
+    
+    if (clone.animationPhase === 'moving_up') {
+      const moveUpDuration = 400; // 400ms 동안 부드럽게 위로 이동
+      if (elapsedTime < moveUpDuration) {
+        const t = elapsedTime / moveUpDuration;
+        // ease-out cubic: 빠르게 시작해서 부드럽게 감속
+        const easedT = 1 - Math.pow(1 - t, 3);
+        
+        // 현재 위치 계산 (X, Y 모두 부드럽게 이동)
+        clone.currentX = clone.originalX + (clone.targetX - clone.originalX) * easedT;
+        clone.currentY = clone.originalY + (clone.targetY - clone.originalY) * easedT;
+          // 각 문자의 위치도 업데이트 (상대적 위치 보존)
+        let currentCharX = clone.currentX;
+        clone.charPositions.forEach((charPos, index) => {
+          charPos.x = currentCharX;
+          charPos.currentY = clone.currentY;
+          currentCharX += charPos.width;
+        });
+      } else {
+        // 이동 완료, 정지 상태로 전환
+        clone.animationPhase = 'stationary';
+        clone.currentX = clone.targetX;
+        clone.currentY = clone.targetY;
+        
+        // 최종 위치로 문자 위치들 고정
+        let finalCharX = clone.targetX;
+        clone.charPositions.forEach(charPos => {
+          charPos.x = finalCharX;
+          charPos.currentY = clone.targetY;
+          finalCharX += charPos.width;
+        });
+        
+        console.log("✅ Verb clone animation completed smoothly:", clone.word);
+      }
+    }
+  }
+}
+
+// 동사 복제본을 수동으로 제거하는 함수
+function clearVerbClones() {
+  verbClones = [];
+}
+
+// --- END: 동사 복제본 관련 함수들 ---
+
 // 조동사와 함께 애니메이션되는 주어 찾기
 function findSubjectAnimationForAux(auxAnimation) {
   // 같은 시간대에 활성화된 애니메이션 중에서 주어를 찾음
@@ -1332,6 +1455,36 @@ function findSubjectAnimationForAux(auxAnimation) {
       return anim;
     }
   }
+  return null;
+}
+
+// 질문 문장에서 동사 wordRect를 찾는 함수
+function findVerbWordRectForQuestion() {
+  if (!currentQuestionSentence || !centerSentenceWordRects) return null;
+  
+  const fullQuestionText = (currentQuestionSentence.line1 + " " + currentQuestionSentence.line2).trim();
+  const wordsInSentence = fullQuestionText.split(" ").filter(w => w.length > 0);
+  
+  // 의문사, 조동사, 주어 다음에 나오는 동사 찾기
+  for (let i = 3; i < wordsInSentence.length; i++) { // 3번째 인덱스부터 (의문사+조동사+주어 다음)
+    const word = wordsInSentence[i];
+    if (isVerb(word) && !isAux(word)) {
+      // centerSentenceWordRects에서 해당 동사의 wordRect 찾기
+      const questionWordRects = centerSentenceWordRects.filter(r => r.isQuestionWord === true);
+      if (questionWordRects.length > i && questionWordRects[i]) {
+        const candidateRect = questionWordRects[i];
+        const candidateTextClean = candidateRect.word.replace(/[^a-zA-Z0-9']/g, "").toLowerCase();
+        const verbTextClean = word.replace(/[^a-zA-Z0-9']/g, "").toLowerCase();
+        
+        if (candidateTextClean === verbTextClean) {
+          console.log("✅ Found verb wordRect for question:", word, "at index", i);
+          return candidateRect;
+        }
+      }
+    }
+  }
+  
+  console.log("❌ No verb wordRect found for question");
   return null;
 }
 
@@ -1975,6 +2128,24 @@ function drawCenterSentence() {
                 }
                 ctx.fillText(charPos.char, charPos.x, charPos.currentY);            });
         });
+          ctx.restore();
+    }
+
+    // 동사 복제본 렌더링
+    if (verbClones.length > 0) {
+        ctx.save();
+        ctx.globalAlpha = centerAlpha;
+        ctx.font = englishFont;
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        
+        verbClones.forEach(clone => {
+            // 동사 복제본 그리기 (동사는 노란색)
+            ctx.fillStyle = '#FFD600';
+            clone.charPositions.forEach(charPos => {
+                ctx.fillText(charPos.char, charPos.x, charPos.currentY);
+            });
+        });
         
         ctx.restore();
     }
@@ -2458,9 +2629,14 @@ function update(delta) {
   if (questionWordClones.length > 0) {
     updateQuestionWordClones(performance.now());
   }
-    // Update subject+auxiliary clones
+  // Update subject+auxiliary clones
   if (subjectAuxClones.length > 0) {
     updateSubjectAuxClones(performance.now());
+  }
+  
+  // Update verb clones
+  if (verbClones.length > 0) {
+    updateVerbClones(performance.now());
   }
   
   // Update bounce animations
