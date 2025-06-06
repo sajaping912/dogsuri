@@ -2198,12 +2198,10 @@ function drawCenterSentence() {
         const englishWordMiddleY = activeWordTranslation.y;
         const englishWordHalfHeight = activeWordTranslation.h / 2;
 
-        let translateX, translateY, angleRad, textAlign, textBaseline, drawX, drawY;
-
-        if (activeWordTranslation.lineIndex === 0) { // 위쪽 줄 단어: 우상향 40도 ("//" 모양)
+        let translateX, translateY, angleRad, textAlign, textBaseline, drawX, drawY;        if (activeWordTranslation.lineIndex === 0) { // 위쪽 줄 단어: 우상향 40도 ("//" 모양)
             translateX = wordCenterX;
-            // Y 위치: 기존 verticalClearanceFirstLine (13) 에서 20px 아래로 이동 요청 반영
-            const verticalClearanceFirstLine = 13 - 20; // 즉, -7. 결과적으로 단어 윗면에서 (basePadding(8) + (-7)) = 1px 위가 회전 중심 Y.
+            // Y 위치: 기존 verticalClearanceFirstLine (13) 에서 25px 아래로 이동 요청 반영 (20px + 추가 5px)
+            const verticalClearanceFirstLine = 13 - 25; // 즉, -12. 결과적으로 단어 윗면에서 (basePadding(8) + (-12)) = -4px 아래가 회전 중심 Y.
             translateY = englishWordMiddleY - englishWordHalfHeight - basePadding - verticalClearanceFirstLine;
 
             angleRad = -angleDegrees * Math.PI / 180; // 우상향 (-40도)
