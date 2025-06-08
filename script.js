@@ -1035,6 +1035,7 @@ let subjectAuxClones = []; // 생성된 주어+조동사 복제본들을 저장
 const SUBJECT_AUX_CLONE_OFFSET_Y = 60; // 주어+조동사 복제본이 원본에서 위로 얼마나 떨어져 있을지 (의문사 복제본보다 10px 더 위)
 const SUBJECT_AUX_CLONE_OFFSET_X = 15; // 주어+조동사 복제본이 의문사 복제본에서 오른쪽으로 15px 떨어져 있을지
 let cloneCreatedForCurrentAnswer = false; // 현재 답변에서 복제본이 이미 생성되었는지 추적
+const WORD_SWAP_ANIMATION_DURATION = 2000; // 단어 순서 바뀜 애니메이션 지속시간 (2초)
 // --- END: 주어+조동사 복제본 관련 변수들 ---
 
 // --- START: 화살표 애니메이션 관련 변수들 ---
@@ -1255,15 +1256,15 @@ function clearQuestionWordClones() {
 
 // --- START: 주어+조동사 복제본 관련 함수들 ---
 
-// 주어+조동사 복제본 생성 함수 (순서 바뀜: 주어 + 조동사)
+// 주어+조동사 복제본 생성 함수 (원래 순서 유지: 조동사 + 주어)
 function createSubjectAuxClone(subjectAnimation, auxAnimation) {
   if (!subjectAnimation || !auxAnimation || !subjectAnimation.targetWordRect || !auxAnimation.targetWordRect) return;
   
   // 현재 조동사 애니메이션의 고점 위치 계산
   const currentAnimationHighPoint = auxAnimation.targetWordRect.y - auxAnimation.maxHeight;
   
-  // 주어 + 조동사 텍스트 결합 (순서 바뀜)
-  const combinedText = subjectAnimation.wordText + " " + auxAnimation.wordText;
+  // 조동사 + 주어 텍스트 결합 (원래 순서 유지)
+  const combinedText = auxAnimation.wordText + " " + subjectAnimation.wordText;
   
   // 의문사 복제본이 있는 경우 그 끝 위치를 찾아서 10px 떨어뜨리기
   let targetX = auxAnimation.targetWordRect.x; // 기본값: 조동사 위치
@@ -1275,11 +1276,9 @@ function createSubjectAuxClone(subjectAnimation, auxAnimation) {
       const lastChar = questionClone.charPositions[questionClone.charPositions.length - 1];
       targetX = lastChar.x + lastChar.width + SUBJECT_AUX_CLONE_OFFSET_X;
     }
-  }
-  
-  const clone = {
-    subjectWord: subjectAnimation.wordText,
-    auxWord: auxAnimation.wordText,
+  }    const clone = {
+    auxWord: auxAnimation.wordText,      // 조동사를 첫 번째로
+    subjectWord: subjectAnimation.wordText,  // 주어를 두 번째로
     combinedText: combinedText,
     originalX: targetX, // 의문사 복제본 끝에서 10px 떨어진 위치
     originalY: currentAnimationHighPoint,
@@ -1288,24 +1287,64 @@ function createSubjectAuxClone(subjectAnimation, auxAnimation) {
     charPositions: [], // 결합된 텍스트의 각 문자 위치
     createdTime: performance.now(),
     animationPhase: 'moving_up',
-    alpha: 1.0
+    alpha: 1.0,
+    // 순서 바뀜 애니메이션 관련 속성들
+    swapAnimationStartTime: null, // 순서 바뀜 애니메이션 시작 시간
+    isSwapAnimationActive: false, // 순서 바뀜 애니메이션 활성화 여부
+    auxCharPositions: [], // 조동사 문자들의 개별 위치
+    subjectCharPositions: [] // 주어 문자들의 개별 위치
   };
-  
-  // 결합된 텍스트의 문자 위치 계산
+    // 결합된 텍스트의 문자 위치 계산
   ctx.font = englishFont;
   const letters = combinedText.split('');
   let currentX = clone.originalX;
   
-  letters.forEach((char) => {
+  // 조동사 문자들의 위치 계산
+  const auxLetters = clone.auxWord.split('');
+  auxLetters.forEach((char) => {
     const charWidth = ctx.measureText(char).width;
-    clone.charPositions.push({
+    const charPos = {
       char: char,
       x: currentX,
       originalY: currentAnimationHighPoint,
       currentY: currentAnimationHighPoint,
-      width: charWidth
-    });
-    currentX += charWidth;  });
+      width: charWidth,
+      originalX: currentX // 원본 X 위치 저장
+    };
+    clone.charPositions.push(charPos);
+    clone.auxCharPositions.push(charPos);
+    currentX += charWidth;
+  });
+  
+  // 공백 문자 추가
+  const spaceWidth = ctx.measureText(' ').width;
+  const spacePos = {
+    char: ' ',
+    x: currentX,
+    originalY: currentAnimationHighPoint,
+    currentY: currentAnimationHighPoint,
+    width: spaceWidth,
+    originalX: currentX
+  };
+  clone.charPositions.push(spacePos);
+  currentX += spaceWidth;
+  
+  // 주어 문자들의 위치 계산
+  const subjectLetters = clone.subjectWord.split('');
+  subjectLetters.forEach((char) => {
+    const charWidth = ctx.measureText(char).width;
+    const charPos = {
+      char: char,
+      x: currentX,
+      originalY: currentAnimationHighPoint,
+      currentY: currentAnimationHighPoint,
+      width: charWidth,
+      originalX: currentX // 원본 X 위치 저장
+    };
+    clone.charPositions.push(charPos);
+    clone.subjectCharPositions.push(charPos);
+    currentX += charWidth;
+  });
   
   subjectAuxClones.push(clone);
   
@@ -1327,8 +1366,7 @@ function updateSubjectAuxClones(currentTime) {
         const t = elapsedTime / moveUpDuration;
         const easedT = 1 - Math.pow(1 - t, 3); // ease-out cubic
         clone.currentY = clone.originalY + (clone.targetY - clone.originalY) * easedT;
-        
-        // 각 문자의 위치도 업데이트
+          // 각 문자의 위치도 업데이트
         clone.charPositions.forEach(cp => {
           cp.currentY = cp.originalY + (clone.targetY - clone.originalY) * easedT;
         });
@@ -1339,6 +1377,94 @@ function updateSubjectAuxClones(currentTime) {
         clone.charPositions.forEach(cp => {
           cp.currentY = clone.targetY;
         });
+        
+        // 정착 후 1초 뒤 순서 바뀜 애니메이션 시작
+        if (!clone.swapAnimationStartTime) {
+          setTimeout(() => {
+            clone.swapAnimationStartTime = performance.now();
+            clone.isSwapAnimationActive = true;
+          }, 1000); // 1초 후 순서 바뀜 애니메이션 시작
+        }
+      }
+    } else if (clone.animationPhase === 'stationary' && clone.isSwapAnimationActive) {
+      // 순서 바뀜 애니메이션 처리
+      const swapElapsedTime = currentTime - clone.swapAnimationStartTime;
+        if (swapElapsedTime < WORD_SWAP_ANIMATION_DURATION) {
+        const t = swapElapsedTime / WORD_SWAP_ANIMATION_DURATION;
+        const easedT = 1 - Math.pow(1 - t, 3); // ease-out cubic - 부드럽고 일관된 이동
+        
+        // 주어의 최종 위치 계산 (맨 앞으로)
+        const subjectFinalX = clone.originalX;
+        
+        // 조동사의 최종 위치 계산 (주어 뒤로)
+        ctx.font = englishFont;
+        const subjectWidth = ctx.measureText(clone.subjectWord).width;
+        const spaceWidth = ctx.measureText(' ').width;
+        const auxFinalX = subjectFinalX + subjectWidth + spaceWidth;        // 주어 문자들을 반원 경로로 이동 (위쪽으로 호를 그리며 앞으로)
+        const subjectStartX = clone.subjectCharPositions[0].originalX;
+        const subjectTargetX = subjectFinalX;
+        
+        // 직선 이동과 아크 높이를 분리하여 계산
+        const linearX = subjectStartX + (subjectTargetX - subjectStartX) * easedT;
+        const arcProgress = Math.sin(Math.PI * easedT); // 0에서 1로 올라갔다가 다시 0으로
+        const arcY = clone.targetY - 30 * arcProgress; // 최대 30px 위로
+        
+        // 모든 주어 문자들을 블록으로 이동
+        let offsetX = 0;
+        clone.subjectCharPositions.forEach((charPos) => {
+          charPos.x = linearX + offsetX;
+          charPos.currentY = arcY;
+          offsetX += charPos.width;
+        });
+          // 조동사 문자들을 직선으로 뒤쪽으로 이동
+        clone.auxCharPositions.forEach((charPos, index) => {
+          // 각 조동사 문자의 최종 목표 위치 계산
+          let targetCharX = auxFinalX;
+          for (let i = 0; i < index; i++) {
+            targetCharX += clone.auxCharPositions[i].width;
+          }
+          charPos.x = charPos.originalX + (targetCharX - charPos.originalX) * easedT;
+        });
+        
+      } else {
+        // 순서 바뀜 애니메이션 완료
+        clone.isSwapAnimationActive = false;
+        
+        // 최종 위치로 고정
+        const subjectFinalX = clone.originalX;
+        ctx.font = englishFont;
+        const subjectWidth = ctx.measureText(clone.subjectWord).width;
+        const spaceWidth = ctx.measureText(' ').width;
+        const auxFinalX = subjectFinalX + subjectWidth + spaceWidth;
+          // 주어를 앞으로
+        let currentSubjectX = subjectFinalX;
+        clone.subjectCharPositions.forEach((charPos) => {
+          charPos.x = currentSubjectX;
+          charPos.currentY = clone.targetY;
+          currentSubjectX += charPos.width;
+        });
+        
+        // 조동사를 뒤로
+        let currentAuxX = auxFinalX;
+        clone.auxCharPositions.forEach((charPos) => {
+          charPos.x = currentAuxX;
+          charPos.currentY = clone.targetY;
+          currentAuxX += charPos.width;
+        });
+        
+        // charPositions 배열 재정렬 (주어 + 공백 + 조동사 순서로)
+        clone.charPositions = [
+          ...clone.subjectCharPositions,
+          clone.charPositions.find(cp => cp.char === ' '), // 공백 찾기
+          ...clone.auxCharPositions
+        ];
+        
+        // 공백 위치 조정
+        const spaceChar = clone.charPositions.find(cp => cp.char === ' ');
+        if (spaceChar) {
+          spaceChar.x = subjectFinalX + subjectWidth;
+          spaceChar.currentY = clone.targetY;
+        }
       }
     }
   }
@@ -2277,26 +2403,66 @@ function drawCenterSentence() {
         ctx.globalAlpha = centerAlpha;
         ctx.font = englishFont;
         ctx.textAlign = "left";
-        ctx.textBaseline = "middle";
-        
-        subjectAuxClones.forEach(clone => {
-            // 복제본 텍스트 그리기 (주어는 흰색, 조동사는 파란색)
-            let currentCharIndex = 0;
-            const subjectLength = clone.subjectWord.length;
-            const spaceLength = 1; // 공백 문자 1개
+        ctx.textBaseline = "middle";        subjectAuxClones.forEach(clone => {
+            // 순서 바뀜 애니메이션 상태 확인
+            const isSwapAnimationActive = clone.isSwapAnimationActive;
+            const isSwapCompleted = clone.swapAnimationStartTime && 
+                                  !clone.isSwapAnimationActive && 
+                                  (performance.now() - clone.swapAnimationStartTime) >= WORD_SWAP_ANIMATION_DURATION;
             
-            clone.charPositions.forEach((charPos, index) => {
-                if (index < subjectLength) {
-                    // 주어 부분 - 흰색
+            if (isSwapAnimationActive) {
+                // 애니메이션 중: 조동사와 주어 문자들을 개별적으로 렌더링
+                
+                // 조동사 문자들 렌더링 (파란색)
+                ctx.fillStyle = '#40b8ff';
+                clone.auxCharPositions.forEach(charPos => {
+                    ctx.fillText(charPos.char, charPos.x, charPos.currentY);
+                });
+                
+                // 주어 문자들 렌더링 (흰색)
+                ctx.fillStyle = '#ffffff';
+                clone.subjectCharPositions.forEach(charPos => {
+                    ctx.fillText(charPos.char, charPos.x, charPos.currentY);
+                });
+                
+                // 공백 렌더링 (흰색)
+                const spaceChar = clone.charPositions.find(cp => cp.char === ' ');
+                if (spaceChar) {
                     ctx.fillStyle = '#ffffff';
-                } else if (index < subjectLength + spaceLength) {
-                    // 공백 부분 - 흰색
-                    ctx.fillStyle = '#ffffff';
-                } else {
-                    // 조동사 부분 - 파란색
-                    ctx.fillStyle = '#40b8ff';
+                    ctx.fillText(spaceChar.char, spaceChar.x, spaceChar.currentY);
                 }
-                ctx.fillText(charPos.char, charPos.x, charPos.currentY);            });
+                
+            } else {
+                // 일반 렌더링 (애니메이션 전/후)
+                clone.charPositions.forEach((charPos, index) => {
+                    if (!isSwapCompleted) {
+                        // 원래 순서: 조동사(파란색) + 주어(흰색)
+                        const auxLength = clone.auxWord.length;
+                        const spaceLength = 1;
+                        
+                        if (index < auxLength) {
+                            ctx.fillStyle = '#40b8ff'; // 조동사 - 파란색
+                        } else if (index < auxLength + spaceLength) {
+                            ctx.fillStyle = '#ffffff'; // 공백 - 흰색
+                        } else {
+                            ctx.fillStyle = '#ffffff'; // 주어 - 흰색
+                        }
+                    } else {
+                        // 순서 바뀜 완료: 주어(흰색) + 조동사(파란색)
+                        const subjectLength = clone.subjectWord.length;
+                        const spaceLength = 1;
+                        
+                        if (index < subjectLength) {
+                            ctx.fillStyle = '#ffffff'; // 주어 - 흰색
+                        } else if (index < subjectLength + spaceLength) {
+                            ctx.fillStyle = '#ffffff'; // 공백 - 흰색
+                        } else {
+                            ctx.fillStyle = '#40b8ff'; // 조동사 - 파란색
+                        }
+                    }
+                    ctx.fillText(charPos.char, charPos.x, charPos.currentY);
+                });
+            }
         });
           ctx.restore();
     }
