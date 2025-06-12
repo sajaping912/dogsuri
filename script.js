@@ -27,8 +27,13 @@ window.addEventListener('resize', () => {
   calculateTopOffset(); // Recalculate offset on resize
 });
 
-// --- START: 새로운 96개 영어 문장 ---
-const sentences = [
+// --- START: 모듈화된 영어 문장 참조 ---
+const sentences = GAME_SENTENCES;
+// --- END: 모듈화된 영어 문장 참조 ---
+
+// 기존 하드코딩된 문장들은 아래 주석으로 보존 (참고용)
+/*
+const sentences_original = [
   "What will we build with these big boxes?", // 1.txt
   "We will make a spaceship for our trip.", // 2.txt
   "When will they come to the backyard party?", // 3.txt
@@ -125,11 +130,15 @@ const sentences = [
   "He couldn’t join us because he caught a cold.", // 94.txt
   "How couldn’t we keep our socks from getting wet?", // 95.txt
   "We couldn’t keep them dry without rain boots on." // 96.txt
-];
-// --- END: 새로운 96개 영어 문장 ---
+*/
 
-// --- START: 새로운 96개 한국어 번역 (자리 표시자) ---
-const translations = [
+// --- START: 모듈화된 한국어 번역 참조 ---
+const translations = GAME_TRANSLATIONS;
+// --- END: 모듈화된 한국어 번역 참조 ---
+
+// 기존 하드코딩된 번역들은 아래 주석으로 보존 (참고용)
+/*
+const translations_original = [
   "이 큰 상자들로 무엇을 만들 건가요?", // 1.txt 번역 예시
   "우리는 여행을 위한 우주선을 만들 거예요.", // 2.txt 번역 예시
   "그들은 언제 뒷마당 파티에 올 건가요?", // 3.txt 번역 예시
@@ -223,11 +232,10 @@ const translations = [
   "그녀는 레모네이드 가판대를 어디에 설치할 수 없었나요?", // 91.txt 번역 예시
   "물이 뚝뚝 떨어지는 나무 아래에는 설치할 수 없었어요.", // 92.txt 번역 예시
   "누가 간식 소풍에 우리와 함께하지 못했나요?", // 93.txt 번역 예시
-  "그는 감기에 걸려서 우리와 함께하지 못했어요.", // 94.txt 번역 예시
-  "양말이 젖지 않게 하려면 어떻게 해야 했을까요?", // 95.txt 번역 예시
+  "그는 감기에 걸려서 우리와 함께하지 못했어요.", // 94.txt 번역 예시  "양말이 젖지 않게 하려면 어떻게 해야 했을까요?", // 95.txt 번역 예시
   "장화를 신지 않고는 마른 상태로 유지할 수 없었어요." // 96.txt
 ];
-// --- END: 새로운 96개 한국어 번역 ---
+*/
 
 
 let sentenceIndex = Number(localStorage.getItem('sentenceIndex') || 0);
@@ -474,6 +482,53 @@ const notVerbIng = [
 function isAux(word) {
   const lowerWord = word.toLowerCase().replace(/[^a-z0-9']/g, '');
   return MODAL_AUX.includes(lowerWord) || DO_AUX.includes(lowerWord);
+}
+
+// 조동사 부정어(auxiliary verb contractions) 인식 함수
+function isAuxiliaryContraction(word) {
+  const lowerWord = word.toLowerCase().replace(/[^a-z0-9']/g, '');
+  const auxiliaryContractions = [
+    "won't", "wont", "wouldn't", "wouldnt", "can't", "cant", "cannot",
+    "couldn't", "couldnt", "shouldn't", "shouldnt", "mustn't", "mustnt",
+    "don't", "dont", "doesn't", "doesnt", "didn't", "didnt",
+    "isn't", "isnt", "aren't", "arent", "wasn't", "wasnt", "weren't", "werent",
+    "haven't", "havent", "hasn't", "hasnt", "hadn't", "hadnt"
+  ];
+  return auxiliaryContractions.includes(lowerWord);
+}
+
+// 주어인지 판단하는 함수 (의문사, 조동사, 동사가 아닌 단어)
+function isSubject(word) {
+  const lowerWord = word.toLowerCase().replace(/[^a-z0-9']/g, '');
+  
+  // 의문사, 조동사, 동사가 아니면 주어로 간주
+  if (isWh(lowerWord) || isAux(lowerWord) || isVerb(lowerWord) || isAuxiliaryContraction(lowerWord)) {
+    return false;
+  }
+  
+  // 일반적인 주어 단어들
+  const commonSubjects = [
+    "i", "you", "he", "she", "it", "we", "they", "this", "that", "these", "those",
+    "mom", "dad", "teacher", "student", "boy", "girl", "man", "woman", "people",
+    "children", "kids", "baby", "puppy", "cat", "dog", "bird", "car", "house",
+    "school", "book", "toy", "game", "ball", "cake", "cookie", "water", "milk"
+  ];
+    return commonSubjects.includes(lowerWord) || lowerWord.length > 0;
+}
+
+// 현재 위치 이전에 조동사가 있는지 확인하는 함수 (첫 번째 줄에서만)
+function hasAuxiliaryBefore(words, currentIndex) {
+  for (let i = currentIndex - 1; i >= 0; i--) {
+    const word = words[i].toLowerCase().replace(/[^a-z0-9']/g, '');
+    if (isAux(word) || isAuxiliaryContraction(word)) {
+      return true; // 조동사를 찾음
+    }
+    // 동사를 만나면 중단 (주어 영역이 끝남)
+    if (isVerb(word) && !isAux(word) && !isAuxiliaryContraction(word)) {
+      break;
+    }
+  }
+  return false; // 조동사를 찾지 못함
 }
 function isWh(word) {
   const whs = ["what","when","where","who","whom","whose","which","why","how"];
@@ -814,203 +869,68 @@ const englishFont = "21.168px Arial";
 const translationFont = "17.0px Arial";
 
 // =======================================================================
-// START OF MODIFIED splitSentence FUNCTION
+// START OF MODIFIED splitSentence FUNCTION - 첫째 줄 4단위 고정 (관사+명사 = 1단위)
 // =======================================================================
 function splitSentence(sentenceText, isCurrentlyQuestion = null) {
     if (!sentenceText) return ["", ""];
     const words = sentenceText.trim().split(" ");
     const originalSentenceForShortCheck = sentenceText.trim();
 
-    let line1Words = [];
-    let line2Words = [];    // 의문사+조동사+주어+동사 패턴 확인 및 특별 처리
-    console.log("🔍 Checking splitSentence for:", sentenceText);
-    console.log("🔍 Words:", words);
-    console.log("🔍 isCurrentlyQuestion:", isCurrentlyQuestion);
+    console.log("🔍 Splitting sentence:", sentenceText);
+    console.log("🔍 Original words:", words);
+      // 🎯 관사 + 명사, not + 동사를 하나의 단위로 묶기
+    const combinedUnits = [];
+    let i = 0;
     
-    const firstWordClean = words.length > 0 ? words[0].toLowerCase().replace(/[^a-z0-9']/g, "") : "";
-    const secondWordClean = words.length > 1 ? words[1].toLowerCase().replace(/[^a-z0-9']/g, "") : "";
-    
-    console.log("🔍 First word clean:", firstWordClean, "isWh:", isWh(firstWordClean));
-    console.log("🔍 Second word clean:", secondWordClean, "isAux:", isAux(secondWordClean));
-    
-    const isQuestionWordAuxSubjectVerbForm = isCurrentlyQuestion !== false && 
-        words.length >= 4 && 
-        isWh(firstWordClean) &&
-        isAux(secondWordClean);
-    
-    console.log("🔍 Pattern match result:", isQuestionWordAuxSubjectVerbForm);    if (isQuestionWordAuxSubjectVerbForm) {
-        // 의문사+조동사+주어+동사 패턴에서는 최소 4개 단어까지 첫째 줄에 포함
-        // 추가로 동사를 찾아서 동사까지 포함시킴
-        let verbIndex = 3; // 최소 4번째 단어(인덱스 3)까지는 포함
+    while (i < words.length) {
+        const currentWord = words[i].toLowerCase().replace(/[^a-z]/g, '');
         
-        for (let i = 3; i < words.length; i++) {
-            const word = words[i].toLowerCase().replace(/[^a-z0-9']/g, "");
-            console.log("🔍 Checking word at index", i, ":", word, "isVerb:", isVerb(word), "isAux:", isAux(word));
-            
-            // 특별 케이스: "do"는 의문문에서 일반동사로 취급
-            const isMainVerb = (isVerb(word) && !isAux(word)) || 
-                               (word === "do" && i > 1); // 2번째 위치 이후의 "do"는 일반동사
-            
-            if (isMainVerb) {
-                verbIndex = i;
-                console.log("✅ Found verb at index", i, ":", word);
-                break;
+        // 관사인지 확인 (a, an, the)
+        if ((currentWord === 'a' || currentWord === 'an' || currentWord === 'the') && i + 1 < words.length) {
+            // 관사 + 다음 단어를 하나의 단위로 묶기
+            const combinedUnit = words[i] + " " + words[i + 1];
+            combinedUnits.push(combinedUnit);
+            console.log("📦 Combined unit (article + noun):", combinedUnit);
+            i += 2; // 두 단어를 처리했으므로 2 증가
+        } else if (currentWord === 'not' && i + 1 < words.length) {
+            // "not" + 다음 단어가 동사인지 확인
+            const nextWord = words[i + 1].toLowerCase().replace(/[^a-z0-9']/g, '');
+            if (isVerb(nextWord)) {
+                // not + 동사를 하나의 단위로 묶기
+                const combinedUnit = words[i] + " " + words[i + 1];
+                combinedUnits.push(combinedUnit);
+                console.log("📦 Combined unit (not + verb):", combinedUnit);
+                i += 2; // 두 단어를 처리했으므로 2 증가
+            } else {
+                // "not" 다음이 동사가 아니면 그대로 추가
+                combinedUnits.push(words[i]);
+                i += 1;
             }
+        } else {
+            // 일반 단어는 그대로 추가
+            combinedUnits.push(words[i]);
+            i += 1;
         }
-        
-        // 동사까지 또는 최소 4개 단어까지 첫째 줄에 포함
-        line1Words = words.slice(0, verbIndex + 1);
-        line2Words = words.slice(verbIndex + 1);        console.log("🎯 Question word + aux + subject + verb pattern detected, forcing verb to line 1");
-        console.log("  - Line 1:", line1Words.join(" "));
-        console.log("  - Line 2:", line2Words.join(" "));
-        return [line1Words.join(" "), line2Words.join(" ").trim()];
+    }    console.log("✅ Combined units:", combinedUnits);
+    console.log("🔢 Total units:", combinedUnits.length);
+    
+    let line1Units = [];
+    let line2Units = [];
+    
+    // 🎯 기본 규칙: 첫째 줄에 4개 단위 (not+동사는 이미 하나의 단위로 처리됨)
+    if (combinedUnits.length <= 4) {
+        // 4개 이하의 단위는 모두 첫째 줄에
+        line1Units = combinedUnits.slice();
+        line2Units = [];
+    } else {
+        // 4개 이상이면 첫 4개는 첫째 줄, 나머지는 둘째 줄
+        line1Units = combinedUnits.slice(0, 4);
+        line2Units = combinedUnits.slice(4);
     }
-
-    let modalHavePpFoundAndSplit = false;
-
-    for (let i = 0; i < words.length; i++) {
-        if (isAux(words[i])) {
-            let modalIdx = i;
-            let haveIdx = -1;
-            let ppIdx = -1;
-
-            if (modalIdx + 2 < words.length &&
-                words[modalIdx + 1].toLowerCase().replace(/'/g, "") === "have" &&
-                isPastParticiple(words[modalIdx + 2])) {
-                haveIdx = modalIdx + 1;
-                ppIdx = modalIdx + 2;
-            }
-            else if (modalIdx + 3 < words.length &&
-                     words[modalIdx + 2].toLowerCase().replace(/'/g, "") === "have" &&
-                     isPastParticiple(words[modalIdx + 3])) {
-                haveIdx = modalIdx + 2;
-                ppIdx = modalIdx + 3;
-            }
-
-            if (ppIdx !== -1) {
-                let endIndexForLine1 = ppIdx + 1;
-                line1Words = words.slice(0, endIndexForLine1);
-                line2Words = words.slice(endIndexForLine1);
-                modalHavePpFoundAndSplit = true;
-                break;
-            }
-        }
-    }
-
-    if (!modalHavePpFoundAndSplit) {
-        const isEffectiveQuestionType = (isCurrentlyQuestion !== null) ? isCurrentlyQuestion : originalSentenceForShortCheck.endsWith('?');
-        let wordsConsumed = 0;
-        let wordsConsumedForLine1 = 0;
-
-        if (isEffectiveQuestionType) {
-            if (words.length > 0) {
-                if (isWh(words[0])) {
-                    line1Words.push(words[0]); wordsConsumed = 1;
-                    if (wordsConsumed < words.length && isAux(words[wordsConsumed])) {
-                        line1Words.push(words[wordsConsumed++]);
-                        if (wordsConsumed < words.length) {
-                            line1Words.push(words[wordsConsumed++]);
-                            if (wordsConsumed < words.length && isVerb(words[wordsConsumed]) && !isAux(words[wordsConsumed])) {
-                                line1Words.push(words[wordsConsumed++]);
-                            }
-                        }
-                    } else if (wordsConsumed < words.length && (isVerb(words[wordsConsumed]) && !isAux(words[wordsConsumed]))) {
-                        line1Words.push(words[wordsConsumed++]);
-                    } else if (wordsConsumed < words.length) {
-                        line1Words.push(words[wordsConsumed++]);
-                        if (wordsConsumed < words.length && (isAux(words[wordsConsumed]) || (isVerb(words[wordsConsumed]) && !isAux(words[wordsConsumed])) ) ) {
-                            if (line1Words.length < 4) { line1Words.push(words[wordsConsumed++]); }
-                        }
-                    }
-                } else if (isAux(words[0])) {
-                    line1Words.push(words[0]); wordsConsumed = 1;
-                    if (wordsConsumed < words.length) {
-                        line1Words.push(words[wordsConsumed++]);
-                        if (wordsConsumed < words.length && isVerb(words[wordsConsumed]) && !isAux(words[wordsConsumed])) {
-                            line1Words.push(words[wordsConsumed++]);
-                        }
-                    }
-                }
-            }
-            if (line1Words.length === 0 && words.length > 0) {
-                let splitIdx = (words.length <= 3) ? words.length : Math.min(2, words.length);
-                if (words.length === 4) splitIdx = 2;
-                else if (words.length === 5) splitIdx = 3;
-                line1Words = words.slice(0, splitIdx);
-                wordsConsumed = line1Words.length;
-            }
-            line2Words = words.slice(wordsConsumed);
-        } else { // Statement
-            let subjectEndIdx = -1;
-            for (let k = 0; k < words.length; k++) {
-                if (isAux(words[k]) || (isVerb(words[k]) && !isAux(words[k])) || isVing(words[k]) || isBeen(words[k])) {
-                    subjectEndIdx = k; break;
-                }
-            }
-            if (subjectEndIdx > 0) { // Subject found, and it's not the first word
-                for (let k = 0; k < subjectEndIdx; k++) line1Words.push(words[k]);
-                wordsConsumedForLine1 = subjectEndIdx;
-
-                // Add auxiliary if present
-                if (wordsConsumedForLine1 < words.length && isAux(words[wordsConsumedForLine1])) {
-                    line1Words.push(words[wordsConsumedForLine1++]);
-                }
-                // Add main verb (or -ing form, or 'been') if present
-                let verbAddedToLine1 = false;
-                if (wordsConsumedForLine1 < words.length && (isVerb(words[wordsConsumedForLine1]) || isVing(words[wordsConsumedForLine1]) || isBeen(words[wordsConsumedForLine1]))) {
-                    let addVerb = true;
-                    // Avoid duplicating aux if it's also identified as a verb (e.g. "can")
-                    if (line1Words.length > subjectEndIdx && line1Words.length > 0) {
-                        const lastWordInL1 = line1Words[line1Words.length - 1].toLowerCase().replace(/[^a-z0-9']/g, '');
-                        const currentVerbCandidate = words[wordsConsumedForLine1].toLowerCase().replace(/[^a-z0-9']/g, '');
-                        if (lastWordInL1 === currentVerbCandidate && isAux(words[wordsConsumedForLine1])) addVerb = false;
-                    }
-                    if (addVerb) { line1Words.push(words[wordsConsumedForLine1]); verbAddedToLine1 = true; }
-                    wordsConsumedForLine1++;
-                }
-                // If a verb was added and there's more, add one more word (likely an object or particle)
-                if (verbAddedToLine1 && wordsConsumedForLine1 < words.length && line1Words.length < 4) { // Limit line 1 length
-                    line1Words.push(words[wordsConsumedForLine1++]);
-                }
-                line2Words = words.slice(wordsConsumedForLine1);
-
-            } else if (subjectEndIdx === 0 && words.length > 0) { // First word is a verb/aux
-                line1Words.push(words[0]); wordsConsumedForLine1 = 1;
-                let verbAddedToLine1 = (isVerb(words[0]) && !isAux(words[0])) || isVing(words[0]) || isBeen(words[0]);
-
-                // If first word was Aux, and next is Verb/Ving/Been (not Aux), add it
-                if (wordsConsumedForLine1 < words.length && isAux(words[0]) &&
-                    (isVerb(words[wordsConsumedForLine1]) || isVing(words[wordsConsumedForLine1]) || isBeen(words[wordsConsumedForLine1])) &&
-                    !isAux(words[wordsConsumedForLine1])) {
-                    line1Words.push(words[wordsConsumedForLine1++]); verbAddedToLine1 = true;
-                }
-                // If a verb was part of line 1, and there's more, add one more word if line is short
-                if (verbAddedToLine1 && wordsConsumedForLine1 < words.length && line1Words.length < 3) {
-                    line1Words.push(words[wordsConsumedForLine1++]);
-                }
-                line2Words = words.slice(wordsConsumedForLine1);
-            } else { // No clear subject-verb split early, or very short sentence
-                const half = Math.max(1, Math.ceil(words.length / 2));
-                line1Words = words.slice(0, half);
-                line2Words = words.slice(half);
-            }
-        }
-    }
-    // If sentence is very short (<=4 words and <35 chars), put all on line 1,
-    // unless it was a modal+have+pp split where line 2 was intentionally empty.
-    if (words.length <= 4 && originalSentenceForShortCheck.length < 35) {
-        if (!(modalHavePpFoundAndSplit && line2Words.length === 0)) {
-            line1Words = words.slice(); // All words to line1
-            line2Words = [];          // Line2 becomes empty
-        }
-    }
-    // Ensure line1 is not empty if original sentence had words
-    if (line1Words.length === 0 && words.length > 0) {
-        line1Words = [words[0]];
-        line2Words = words.slice(1);
-    }
-
-    return [line1Words.join(" "), line2Words.join(" ").trim()];
+    
+    console.log("✅ Line 1 (4 units):", line1Units);
+    console.log("✅ Line 2 (remaining):", line2Units);
+      return [line1Units.join(" "), line2Units.join(" ").trim()];
 }
 // =======================================================================
 // END OF MODIFIED splitSentence FUNCTION
@@ -1683,22 +1603,27 @@ function triggerBounceAnimationForWords(sentenceObject, isQuestion) {
       const isWhWord = isWh(cleanWord);
       console.log(`🔍 Checking word "${wordRect.word}" (clean: "${cleanWord}") - isWh: ${isWhWord}`);
       return isWhWord;
-    });
-  } else {
-    if (isCurrentlyQuestion) {
-      // 질문 문장에서 조동사+주어만: 첫 번째 줄에서 조동사이거나 주어인 단어들만
-      relevantWordRects = firstLineWords.filter(wordRect => {
+    });  } else {
+    if (isCurrentlyQuestion) {      // 질문 문장에서 조동사+주어만: 첫 번째 줄에서 조동사이거나 주어인 단어들만
+      // 실제 첫 번째 줄 단어들을 가져오기 (x 좌표 순으로 정렬)
+      const sortedFirstLineWords = [...firstLineWords].sort((a, b) => a.x - b.x);
+      const actualFirstLineWords = sortedFirstLineWords.map(r => r.word);
+      
+      relevantWordRects = sortedFirstLineWords.filter(wordRect => {
         const cleanWord = wordRect.word.toLowerCase().replace(/[^a-z0-9']/g, '');
-        const isAuxWord = isAux(cleanWord);
-        const isSubject = !isWh(cleanWord) && !isAux(cleanWord) && !isVerb(cleanWord);
-        console.log(`🔍 Checking word "${wordRect.word}" (clean: "${cleanWord}") - isAux: ${isAuxWord}, isSubject: ${isSubject}`);
-        return isAuxWord || isSubject;
+        const isAuxWord = isAux(cleanWord) || isAuxiliaryContraction(cleanWord);
+        
+        // 정렬된 배열에서의 실제 위치
+        const actualWordIndex = sortedFirstLineWords.indexOf(wordRect);
+        const isSubjectWord = hasAuxiliaryBefore(actualFirstLineWords, actualWordIndex) && !isVerb(cleanWord);
+        
+        console.log(`🔍 Checking word "${wordRect.word}" (clean: "${cleanWord}") - isAux: ${isAuxWord}, isSubject: ${isSubjectWord}, actualIndex: ${actualWordIndex}`);
+        return isAuxWord || isSubjectWord;
       });
-    } else if (isCurrentlyAnswer) {
-      // 답변 문장에서 조동사만: 첫 번째 줄에서 조동사인 단어들만
+    } else if (isCurrentlyAnswer) {      // 답변 문장에서 조동사만: 첫 번째 줄에서 조동사인 단어들만
       relevantWordRects = firstLineWords.filter(wordRect => {
         const cleanWord = wordRect.word.toLowerCase().replace(/[^a-z0-9']/g, '');
-        const isAuxWord = isAux(cleanWord);
+        const isAuxWord = isAux(cleanWord) || isAuxiliaryContraction(cleanWord);
         console.log(`🔍 Checking answer word "${wordRect.word}" (clean: "${cleanWord}") - isAux: ${isAuxWord}`);
         return isAuxWord;
       });
@@ -1883,10 +1808,9 @@ function isQuestionWordAuxSubjectVerbPattern(sentenceText) {
       return false;
     }
   }
-  
-  // 두 번째 단어가 조동사인지 확인
-  if (!isAux(secondWord)) {
-    console.log("❌ Second word is not auxiliary:", secondWord);
+    // 두 번째 단어가 조동사 또는 조동사 부정어인지 확인
+  if (!isAux(secondWord) && !isAuxiliaryContraction(secondWord)) {
+    console.log("❌ Second word is not auxiliary or auxiliary contraction:", secondWord);
     return false;
   }
   
@@ -2110,12 +2034,17 @@ function drawSingleSentenceBlock(sentenceObject, baseY, isQuestionBlock, blockCo
             const wordStartX = currentX;
             const measuredWordWidth = wordMetrics[j].width;
 
-            let lowerCleanedWordForColor = rawWord.toLowerCase().replace(/[^a-z0-9']/g, '');
-
-            let color = "#fff";
+            let lowerCleanedWordForColor = rawWord.toLowerCase().replace(/[^a-z0-9']/g, '');            let color = "#fff";
             if (isCurrentBlockContentQuestionType && i === 0 && isWh(lowerCleanedWordForColor)) {
                 color = '#5DBB63';
             } else if (isAux(lowerCleanedWordForColor) || isBeen(lowerCleanedWordForColor) || isVing(lowerCleanedWordForColor)) {
+                color = "#40b8ff";
+            } else if (i === 0 && isAuxiliaryContraction(lowerCleanedWordForColor)) {
+                // 첫 번째 줄에 있는 조동사 부정어를 파란색으로 표시
+                color = "#40b8ff";
+            } else if (i === 0 && j > 0 && hasAuxiliaryBefore(words, j) && !isVerb(lowerCleanedWordForColor)) {
+                // 첫 번째 줄에서 조동사 이후에 오는 모든 주어 구성 요소들을 파란색으로 표시
+                // (동사가 아닌 모든 단어들)
                 color = "#40b8ff";
             } else if (isVerb(lowerCleanedWordForColor) && !blockContext.verbColored && !isAux(lowerCleanedWordForColor)) {
                 color = "#FFD600";
