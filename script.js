@@ -989,9 +989,9 @@ function startWordWaveAnimation(wordRect, drawingContext, enableCloneGeneration 
 
   // 의문사인지 확인
   const isQuestionWordToClone = isWh(wordRect.word.toLowerCase().replace(/[^a-z0-9']/g, ""));
-  
-  // 조동사인지 확인
-  const isAuxiliaryWord = isAux(wordRect.word.toLowerCase().replace(/[^a-z0-9']/g, ""));
+    // 조동사인지 확인 (조동사 부정어도 조동사로 포함)
+  const cleanWord = wordRect.word.toLowerCase().replace(/[^a-z0-9']/g, "");
+  const isAuxiliaryWord = isAux(cleanWord) || isAuxiliaryContraction(cleanWord);
 
   // 의문사인 경우, 복제본 생성이 허용되고 현재 질문에서 복제본이 아직 생성되지 않은 경우에만 기존 복제본들을 제거
   if (isQuestionWordToClone && enableCloneGeneration && !cloneCreatedForCurrentQuestion) {
@@ -1906,15 +1906,13 @@ function triggerSentenceWordAnimation(sentenceObject, isQuestion, allWordRects, 
 
       if (firstWordIndexInRects + 1 < relevantWordRects.length) {
         const secondWordRect = relevantWordRects[firstWordIndexInRects + 1];
-        const secondWordTextClean = secondWordRect.word.toLowerCase().replace(/[^a-z0-9']/g, "");
-
-        if (isAux(secondWordTextClean)) {
+        const secondWordTextClean = secondWordRect.word.toLowerCase().replace(/[^a-z0-9']/g, "");        if (isAux(secondWordTextClean) || isAuxiliaryContraction(secondWordTextClean)) {
           wordsToAnimateSubsequently.push(secondWordRect);
 
           if (firstWordIndexInRects + 2 < relevantWordRects.length) {
             const thirdWordRect = relevantWordRects[firstWordIndexInRects + 2];
             const thirdWordTextClean = thirdWordRect.word.toLowerCase().replace(/[^a-z0-9']/g, "");
-            if (thirdWordTextClean === "have" || (!isVerb(thirdWordTextClean) && !isAux(thirdWordTextClean))) {
+            if (thirdWordTextClean === "have" || (!isVerb(thirdWordTextClean) && !isAux(thirdWordTextClean) && !isAuxiliaryContraction(thirdWordTextClean))) {
                wordsToAnimateSubsequently.push(thirdWordRect);
             }
           }
@@ -1936,11 +1934,10 @@ function triggerSentenceWordAnimation(sentenceObject, isQuestion, allWordRects, 
       const fullSentenceText = (sentenceObject.line1 + " " + sentenceObject.line2).trim();
       const wordsInSentence = fullSentenceText.split(" ").filter(w => w.length > 0);
 
-      if (wordsInSentence.length > 0) {
-        let subjectEndIndex = -1;
+      if (wordsInSentence.length > 0) {        let subjectEndIndex = -1;
         for (let i = 0; i < wordsInSentence.length; i++) {
-          if (isAux(wordsInSentence[i]) ||
-              (isVerb(wordsInSentence[i]) && !isAux(wordsInSentence[i])) ||
+          if (isAux(wordsInSentence[i]) || isAuxiliaryContraction(wordsInSentence[i]) ||
+              (isVerb(wordsInSentence[i]) && !isAux(wordsInSentence[i]) && !isAuxiliaryContraction(wordsInSentence[i])) ||
               isVing(wordsInSentence[i]) ||
               isBeen(wordsInSentence[i])) {
             subjectEndIndex = i - 1;
@@ -1952,11 +1949,9 @@ function triggerSentenceWordAnimation(sentenceObject, isQuestion, allWordRects, 
         }
 
         let auxWordForAnimation = null;
-        let auxWordGlobalIndexInSentence = -1;
-
-        if (subjectEndIndex >= 0 && (subjectEndIndex + 1) < wordsInSentence.length) {
+        let auxWordGlobalIndexInSentence = -1;        if (subjectEndIndex >= 0 && (subjectEndIndex + 1) < wordsInSentence.length) {
           const potentialAux = wordsInSentence[subjectEndIndex + 1];
-          if (isAux(potentialAux)) {
+          if (isAux(potentialAux) || isAuxiliaryContraction(potentialAux)) {
             auxWordForAnimation = potentialAux;
             auxWordGlobalIndexInSentence = subjectEndIndex + 1;
           }
