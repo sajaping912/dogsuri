@@ -21,6 +21,7 @@ html, body {
   padding: 8px;
   background: rgba(0, 0, 0, 0.5);
   z-index: 10;
+  transition: opacity 0.3s ease;
 }
 #topControls button {
   color: #fff;

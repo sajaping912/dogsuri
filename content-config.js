@@ -5,18 +5,18 @@
 
 // 🎯 영어 문장 배열 (96개)
 const GAME_SENTENCES = [
-  "What will we build with these big boxes?", // 1.txt
-  "We will make a spaceship for our trip.", // 2.txt
-  "When will they come to the backyard party?", // 3.txt
-  "I will wear it because we fight monsters.", // 4.txt
-  "When will they come to the backyard party?", // 5.txt
-  "They will come right after their nap time.", // 6.txt
-  "Where will you hide the birthday surprise gift?", // 7.txt
-  "I will hide it under the big green slide.", // 8.txt
-  "Who will bring the cake for the picnic today?", // 9.txt
-  "My mom will bring it in her blue basket.", // 10.txt
-  "How will we catch the tiny rainbow butterfly?", // 11.txt
-  "We will use a net and be very gentle.", // 12.txt
+  "Where will we find those yummy berries?", // 1.txt
+  "We will swing on that long vine!", // 2.txt
+  "Why will you choose that wobbly vine?", // 3.txt
+  "It will be a super speedy ride!", // 4.txt
+  "Who will go first on the vine?", // 5.txt
+  "I will! I am the bravest penguin!", // 6.txt
+  "What will happen if the vine breaks?", // 7.txt
+  "We will just bounce like rubber balls!", // 8.txt
+  "How will we get back if successful?", // 9.txt
+  "We will build a super berry raft!", // 10.txt
+  "When will we eat those juicy berries?", // 11.txt
+  "We will eat them very soon, yum!", // 12.txt
   "What won't you share from your lunchbox today?", // 13.txt
   "I won't share my jelly because it's special.", // 14.txt
   "Why won't your sister play tag with us?", // 15.txt
@@ -105,18 +105,18 @@ const GAME_SENTENCES = [
 
 // 🇰🇷 한국어 번역 배열 (96개)
 const GAME_TRANSLATIONS = [
-  "이 큰 상자들로 무엇을 만들 건가요?", // 1.txt 번역
-  "우리는 여행을 위한 우주선을 만들 거예요.", // 2.txt 번역
-  "그들은 언제 뒷마당 파티에 올 건가요?", // 3.txt 번역
-  "우리가 괴물과 싸우니까 그걸 입을 거예요.", // 4.txt 번역
-  "그들은 언제 뒷마당 파티에 올 건가요?", // 5.txt 번역
-  "낮잠 시간 바로 후에 올 거예요.", // 6.txt 번역
-  "생일 깜짝 선물은 어디에 숨길 건가요?", // 7.txt 번역
-  "큰 초록색 미끄럼틀 아래에 숨길 거예요.", // 8.txt 번역
-  "오늘 소풍에 누가 케이크를 가져올 건가요?", // 9.txt 번역
-  "엄마가 파란 바구니에 담아 가져오실 거예요.", // 10.txt 번역
-  "작은 무지개 나비는 어떻게 잡을 건가요?", // 11.txt 번역
-  "그물을 사용하고 아주 부드럽게 다룰 거예요.", // 12.txt 번역
+  "그 맛있는 베리들을 어디서 찾을 건가요?", // 1.txt 번역
+  "우리는 그 긴 덩굴을 타고 그네를 탈 거예요!", // 2.txt 번역
+  "왜 그 흔들거리는 덩굴을 선택할 건가요?", // 3.txt 번역
+  "정말 빠른 놀이가 될 거예요!", // 4.txt 번역
+  "덩굴에서 누가 먼저 갈 건가요?", // 5.txt 번역
+  "제가요! 저는 가장 용감한 펭귄이에요!", // 6.txt 번역
+  "덩굴이 부러지면 어떻게 될까요?", // 7.txt 번역
+  "우리는 고무공처럼 튕길 거예요!", // 8.txt 번역
+  "성공하면 어떻게 돌아올 건가요?", // 9.txt 번역
+  "멋진 베리 뗏목을 만들 거예요!", // 10.txt 번역
+  "그 즙이 많은 베리들을 언제 먹을 건가요?", // 11.txt 번역
+  "곧 먹을 거예요, 맛있겠다!", // 12.txt 번역
   "오늘 점심 도시락에서 무엇을 나눠주지 않을 건가요?", // 13.txt 번역
   "내 젤리는 특별해서 나눠주지 않을 거예요.", // 14.txt 번역
   "언니는 왜 우리랑 술래잡기를 안 하나요?", // 15.txt 번역
@@ -409,10 +409,116 @@ window.gameContentExamples = {
   }
 };
 
+// 📚 새로운 어휘 설명 (문장 1-12번의 새로운 단어들)
+const NEW_VOCABULARY = {
+  // 베리 관련 단어들
+  "berries": {
+    pronunciation: "[ˈbɛriz]",
+    meaning: "딸기류, 작고 둥근 과일들",
+    example: "Strawberries and blueberries are types of berries.",
+    korean: "딸기와 블루베리는 베리의 종류입니다."
+  },
+  "yummy": {
+    pronunciation: "[ˈjʌmi]",
+    meaning: "맛있는, 냠냠한",
+    example: "These yummy berries taste so sweet!",
+    korean: "이 맛있는 베리들은 정말 달콤해요!"
+  },
+  "juicy": {
+    pronunciation: "[ˈdʒusi]",
+    meaning: "즙이 많은, 과즙이 풍부한",
+    example: "The juicy berries burst with flavor.",
+    korean: "즙이 많은 베리들이 맛으로 터집니다."
+  },
+  
+  // 덩굴과 그네 관련 단어들
+  "vine": {
+    pronunciation: "[vaɪn]",
+    meaning: "덩굴, 포도나무",
+    example: "The long vine hangs from the tall tree.",
+    korean: "긴 덩굴이 키 큰 나무에서 매달려 있습니다."
+  },
+  "swing": {
+    pronunciation: "[swɪŋ]",
+    meaning: "그네타기, 흔들리다",
+    example: "We love to swing on the playground.",
+    korean: "우리는 놀이터에서 그네타는 것을 좋아합니다."
+  },
+  "wobbly": {
+    pronunciation: "[ˈwɑbli]",
+    meaning: "흔들거리는, 불안정한",
+    example: "The wobbly bridge moved back and forth.",
+    korean: "흔들거리는 다리가 앞뒤로 움직였습니다."
+  },
+  "speedy": {
+    pronunciation: "[ˈspidi]",
+    meaning: "빠른, 신속한",
+    example: "The speedy ride made us scream with joy!",
+    korean: "빠른 놀이기구가 우리를 기쁨으로 소리지르게 했어요!"
+  },
+  
+  // 펭귄과 용기 관련 단어들
+  "penguin": {
+    pronunciation: "[ˈpɛŋɡwɪn]",
+    meaning: "펭귄 (남극에 사는 새)",
+    example: "The little penguin waddled on the ice.",
+    korean: "작은 펭귄이 얼음 위에서 뒤뚱거렸습니다."
+  },
+  "bravest": {
+    pronunciation: "[ˈbreɪvɪst]",
+    meaning: "가장 용감한 (brave의 최상급)",
+    example: "She is the bravest person I know.",
+    korean: "그녀는 내가 아는 가장 용감한 사람입니다."
+  },
+  
+  // 움직임과 액션 관련 단어들
+  "bounce": {
+    pronunciation: "[baʊns]",
+    meaning: "튕기다, 반동하다",
+    example: "The ball will bounce high when dropped.",
+    korean: "공을 떨어뜨리면 높이 튕길 것입니다."
+  },
+  "rubber balls": {
+    pronunciation: "[ˈrʌbər bɔlz]",
+    meaning: "고무공들",
+    example: "Children love playing with colorful rubber balls.",
+    korean: "아이들은 알록달록한 고무공으로 노는 것을 좋아합니다."
+  },
+  
+  // 건설과 도구 관련 단어들
+  "build": {
+    pronunciation: "[bɪld]",
+    meaning: "만들다, 건설하다",
+    example: "We will build a sandcastle at the beach.",
+    korean: "우리는 해변에서 모래성을 만들 것입니다."
+  },
+  "raft": {
+    pronunciation: "[ræft]",
+    meaning: "뗏목, 부유물",
+    example: "The wooden raft floated down the river.",
+    korean: "나무 뗏목이 강을 따라 떠내려갔습니다."
+  },
+  
+  // 성공과 결과 관련 단어들
+  "successful": {
+    pronunciation: "[səkˈsɛsfəl]",
+    meaning: "성공한, 성공적인",
+    example: "Our plan was very successful!",
+    korean: "우리의 계획은 매우 성공적이었어요!"
+  },
+  "breaks": {
+    pronunciation: "[breɪks]",
+    meaning: "부러지다, 깨지다",
+    example: "Be careful so the stick doesn't break.",
+    korean: "막대기가 부러지지 않도록 조심하세요."
+  }
+};
+
 console.log('✅ 게임 콘텐츠 설정이 로드되었습니다!');
 console.log(`📝 문장 개수: ${GAME_SENTENCES.length}`);
 console.log(`🇰🇷 번역 개수: ${GAME_TRANSLATIONS.length}`);
 console.log(`🔊 오디오 디렉토리: ${AUDIO_CONFIG.audioDirectory}`);
+console.log(`📚 새로운 어휘: ${Object.keys(NEW_VOCABULARY).length}개`);
 console.log('');
 console.log('💡 사용법을 보려면 개발자 도구에서 다음을 입력하세요:');
 console.log('gameContentExamples.showAll()');

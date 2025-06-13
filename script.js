@@ -5,7 +5,6 @@ const coffeeSteamVideo = document.getElementById('coffeeSteamVideo'); // 김 효
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// --- START: New variable and function for top offset calculation ---
 let topOffset = 0;
 
 function calculateTopOffset() {
@@ -13,18 +12,16 @@ function calculateTopOffset() {
   if (topControlsElement) {
     topOffset = topControlsElement.offsetHeight;
   } else {
-    topOffset = 0; // Default if element not found
+    topOffset = 0;
   }
 }
-// Initial calculation attempt. More reliable calculation in startGame and resize.
-calculateTopOffset();
-// --- END: New variable and function for top offset calculation ---
 
+calculateTopOffset();
 
 window.addEventListener('resize', () => {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-  calculateTopOffset(); // Recalculate offset on resize
+  calculateTopOffset();
 });
 
 // --- START: 모듈화된 영어 문장 참조 ---
@@ -539,8 +536,10 @@ function isVerb(word) {
     "build", "make", "come", "wear", "fight", "hide", "bring", "catch", "use", "share", "play", "feel", "clean",
     "allowed", "join", "break", "crash", "do", "fly", "cry", "got", "lost", "visit", "talk", "help", "stuck", "eat",
     "go", "melt", "laugh", "can", "see", "fix", "jump", "practiced", "open", "hear", "find", "hiding", "start",
-    "taken", "rolled", "bring", "carry", "set", "keep"
-    , "be", "is", "am", "are", "was", "were" // "was", "were" 추가
+    "taken", "rolled", "bring", "carry", "set", "keep",
+    "be", "is", "am", "are", "was", "were", // "was", "were" 추가
+    // 새로운 베리/덩굴/펭귄 문장들에서 누락된 동사들 추가
+    "get", "choose", "happen", "swing", "bounce", "build", "waddle"
   ];
   const lowerWord = word.toLowerCase().replace(/[^a-z0-9]/g, '');
   if (lowerWord === "bringback") return true;
@@ -1781,7 +1780,7 @@ function stopArrowAnimation() {
 // --- END: 바운스 애니메이션 관련 함수들 ---
 // --- END: Word Animation Variables and Functions ---
 
-// 의문사 + 조동사 + 주어 + 동사 패턴 감지 함수
+// 의문사 + 조동사 + 주어 + 동사 패턴 감지 함수 (정확한 순서 검증)
 function isQuestionWordAuxSubjectVerbPattern(sentenceText) {
   const words = sentenceText.trim().split(" ").filter(w => w.length > 0);
   console.log("🔍 Pattern detection for:", sentenceText);
@@ -1792,55 +1791,72 @@ function isQuestionWordAuxSubjectVerbPattern(sentenceText) {
     return false;
   }
   
-  // 첫 번째 단어가 의문사인지 확인
+  // 1️⃣ 첫 번째 단어: 의문사여야 함
   const firstWord = words[0].toLowerCase().replace(/[^a-z0-9']/g, "");
   if (!isWh(firstWord)) {
-    console.log("❌ First word is not a question word:", firstWord);
+    console.log("❌ Position 1: Not a question word:", firstWord);
     return false;
   }
+  console.log("✅ Position 1: Question word found:", firstWord);
   
-  // "의문사 + have + 조동사" 패턴 체크 (복제본 생성 안함)
+  // 2️⃣ 두 번째 단어: 조동사 또는 조동사 부정어여야 함
   const secondWord = words[1].toLowerCase().replace(/[^a-z0-9']/g, "");
-  if (secondWord === "have") {
-    const thirdWord = words[2].toLowerCase().replace(/[^a-z0-9']/g, "");
-    if (isAux(thirdWord)) {
-      console.log("❌ Pattern 'question word + have + aux' detected - no clones should be created");
-      return false;
-    }
-  }
-    // 두 번째 단어가 조동사 또는 조동사 부정어인지 확인
   if (!isAux(secondWord) && !isAuxiliaryContraction(secondWord)) {
-    console.log("❌ Second word is not auxiliary or auxiliary contraction:", secondWord);
+    console.log("❌ Position 2: Not auxiliary or auxiliary contraction:", secondWord);
     return false;
   }
+  console.log("✅ Position 2: Auxiliary found:", secondWord);
   
-  // "의문사 + 조동사 + have + PP" 패턴 체크 (복제본 생성 안함)
+  // 3️⃣ 세 번째 단어: 주어여야 함 (의문사도 조동사도 동사도 아니어야 함)
   const thirdWord = words[2].toLowerCase().replace(/[^a-z0-9']/g, "");
+  
+  // 특별한 예외 패턴들 체크
   if (thirdWord === "have") {
-    console.log("❌ Pattern 'question word + aux + have + PP' detected - no clones should be created");
+    console.log("❌ Position 3: 'have' detected - this creates 'question word + aux + have + PP' pattern");
     return false;
   }
   
-  // 세 번째 단어가 주어인지 확인 (의문사도 조동사도 동사도 아닌 경우)
-  if (isWh(thirdWord) || isAux(thirdWord) || isVerb(thirdWord)) {
-    console.log("❌ Third word is not a proper subject:", thirdWord);
+  if (isWh(thirdWord)) {
+    console.log("❌ Position 3: Should be subject, but found question word:", thirdWord);
     return false;
   }
   
-  // 네 번째 단어 이후에 동사가 있는지 확인
-  let hasVerb = false;
-  for (let i = 3; i < words.length; i++) {
-    const word = words[i].toLowerCase().replace(/[^a-z0-9']/g, "");
-    if (isVerb(word) && !isAux(word)) {
-      hasVerb = true;
-      console.log("✅ Found verb at position", i + 1, ":", word);
-      break;
-    }
+  if (isAux(thirdWord) || isAuxiliaryContraction(thirdWord)) {
+    console.log("❌ Position 3: Should be subject, but found auxiliary:", thirdWord);
+    return false;
   }
   
-  const result = hasVerb;
-  console.log("🎯 Pattern result:", result ? "MATCHES (clones should be created)" : "NO MATCH (no clones)");
-  return result;
+  if (isVerb(thirdWord)) {
+    console.log("❌ Position 3: Should be subject, but found verb:", thirdWord);
+    return false;
+  }
+  
+  console.log("✅ Position 3: Subject found:", thirdWord);
+  
+  // 4️⃣ 네 번째 단어: 동사여야 함 (정확히 4번째 위치에서만)
+  if (words.length < 4) {
+    console.log("❌ Position 4: No word found at position 4");
+    return false;
+  }
+  
+  const fourthWord = words[3].toLowerCase().replace(/[^a-z0-9']/g, "");
+  
+  // 네 번째 단어가 동사이고 조동사가 아니어야 함
+  if (!isVerb(fourthWord)) {
+    console.log("❌ Position 4: Not a verb:", fourthWord);
+    return false;
+  }
+  
+  if (isAux(fourthWord) || isAuxiliaryContraction(fourthWord)) {
+    console.log("❌ Position 4: Should be main verb, but found auxiliary:", fourthWord);
+    return false;
+  }
+  
+  console.log("✅ Position 4: Main verb found:", fourthWord);
+  
+  // 모든 조건을 만족하는 경우에만 true 반환
+  console.log("🎯 Perfect pattern match: 의문사(" + firstWord + ") + 조동사(" + secondWord + ") + 주어(" + thirdWord + ") + 동사(" + fourthWord + ")");
+  return true;
 }
 
 // --- START: New/Modified triggerSentenceWordAnimation Function ---
@@ -3032,39 +3048,43 @@ function resetGameStateForStartStop() {
 }
 
 function startGame() {
+  console.log("🎮 Starting game...");
+  
   calculateTopOffset();
-  if (!allAssetsReady) {
-    console.warn("Assets not ready. Please wait and try starting again.");
-    ctx.fillStyle = "white"; ctx.font = "16px Arial"; ctx.textAlign = "center";
-    ctx.fillText("이미지 및 비디오 로딩 중... 잠시 후 다시 시도하세요.", canvas.width / 2, canvas.height / 2);
-    return;
-  }
-  isGameRunning = true; isGamePaused = false;
+  
+  console.log("✅ Starting game...");
+  
+  isGameRunning = true; 
+  isGamePaused = false;
   document.getElementById('pauseBtn').textContent = 'PAUSE';
+  
+  // BGM 시작
   if (bgmAudio) { bgmAudio.pause(); }
   bgmAudio = new Audio(bgmFiles[bgmIndex]);
-  bgmAudio.volume = isMuted ? 0 : 0.021; bgmAudio.loop = true;
-  const playPromise = bgmAudio.play();
-  if (playPromise !== undefined) {
-    playPromise.catch(error => { console.error('BGM play error on start:', error); });
-  }
-  if (coffeeSteamVideo && coffeeVideoAssetReady) {
+  bgmAudio.volume = isMuted ? 0 : 0.021; 
+  bgmAudio.loop = true;
+  bgmAudio.play().catch(error => console.error('BGM play error:', error));
+  
+  // 비디오 시작
+  if (coffeeSteamVideo) {
     coffeeSteamVideo.currentTime = 0;
-    const coffeePlayPromise = coffeeSteamVideo.play();
-    if (coffeePlayPromise !== undefined) {
-      coffeePlayPromise.catch(error => console.error("Error playing coffee steam video:", error));
-    }
+    coffeeSteamVideo.play().catch(error => console.error("Video play error:", error));
   }
+  
   resetGameStateForStartStop();
+  
   let storedIndex = Number(localStorage.getItem('sentenceIndex') || 0);
   sentenceIndex = storedIndex % sentences.length;
   localStorage.setItem('sentenceIndex', sentenceIndex.toString());
-  spawnEnemy(); spawnEnemy();
+  
+  spawnEnemy(); 
+  spawnEnemy();
+  
   player.x = canvas.width / 2 - PLAYER_SIZE / 2;
   player.y = topOffset + (canvas.height - topOffset) - PLAYER_SIZE - 10;
   player.y = Math.max(topOffset, player.y);
+  
   lastTime = performance.now();
-  getVoicesReliably().catch(err => console.error("startGame: Error during voice pre-warming:", err));
   requestAnimationFrame(gameLoop);
 }
 
