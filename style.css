@@ -13,20 +13,19 @@ html, body {
 /* 메뉴 중앙 정렬 유지 */
 #topControls {
   position: fixed;
-  top: 0;
+  top: 3px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   gap: 16px;
-  padding: 8px;
+  padding: 2px 8px;
   background: rgba(0, 0, 0, 0.5);
   z-index: 10;
-  transition: opacity 0.3s ease;
 }
 #topControls button {
   color: #fff;
   border: none;
-  padding: 8px 12px;
+  padding: 5px 12px;
   font-size: 16px;
   border-radius: 4px;
 }
@@ -44,7 +43,7 @@ html, body {
 /* 볼륨 버튼: 배경/테두리 없음, 오른쪽 상단 끝에 고정 */
 #volumeBtn.volume-btn {
   position: fixed;
-  top: 16px;
+  top: 10px;
   right: 24px;
   background: transparent !important;
   border: none !important;

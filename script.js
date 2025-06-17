@@ -1,10 +1,11 @@
-const canvas = document.getElementById('gameCanvas');
+﻿const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const coffeeSteamVideo = document.getElementById('coffeeSteamVideo'); // 김 효과 비디오 요소
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+// --- START: New variable and function for top offset calculation ---
 let topOffset = 0;
 
 function calculateTopOffset() {
@@ -12,227 +13,222 @@ function calculateTopOffset() {
   if (topControlsElement) {
     topOffset = topControlsElement.offsetHeight;
   } else {
-    topOffset = 0;
+    topOffset = 0; // Default if element not found
   }
 }
-
+// Initial calculation attempt. More reliable calculation in startGame and resize.
 calculateTopOffset();
+// --- END: New variable and function for top offset calculation ---
+
 
 window.addEventListener('resize', () => {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-  calculateTopOffset();
+  calculateTopOffset(); // Recalculate offset on resize
 });
 
-// --- START: 모듈화된 영어 문장 참조 ---
-const sentences = GAME_SENTENCES;
-// --- END: 모듈화된 영어 문장 참조 ---
-
-// 기존 하드코딩된 문장들은 아래 주석으로 보존 (참고용)
-/*
-const sentences_original = [
-  "What will we build with these big boxes?", // 1.txt
-  "We will make a spaceship for our trip.", // 2.txt
-  "When will they come to the backyard party?", // 3.txt
-  "I will wear it because we fight monsters.", // 4.txt
-  "When will they come to the backyard party?", // 5.txt
-  "They will come right after their nap time.", // 6.txt
-  "Where will you hide the birthday surprise gift?", // 7.txt
-  "I will hide it under the big green slide.", // 8.txt
-  "Who will bring the cake for the picnic today?", // 9.txt
-  "My mom will bring it in her blue basket.", // 10.txt
-  "How will we catch the tiny rainbow butterfly?", // 11.txt
-  "We will use a net and be very gentle.", // 12.txt
-  "What won’t you share from your lunchbox today?", // 13.txt
-  "I won’t share my jelly because it’s special.", // 14.txt
-  "Why won’t your sister play tag with us?", // 15.txt
-  "She won’t play because she feels too sleepy.", // 16.txt
-  "When won’t we have to clean our playroom?", // 17.txt
-  "We won’t clean it if it's already tidy.", // 18.txt
-  "Where won’t we be allowed to bring snacks?", // 19.txt
-  "We won’t bring them into the library room.", // 20.txt
-  "Who won’t join us at the zoo tomorrow?", // 21.txt
-  "Grandpa won’t join us because of his knee.", // 22.txt
-  "How won’t the toy car break again soon?", // 23.txt
-  "It won’t break if we don’t crash it hard.", // 24.txt
-  "What would you do with a flying carpet?", // 25.txt
-  "I would fly to grandma’s house for cookies.", // 26.txt
-  "Why would he cry after watching that movie?", // 27.txt
-  "He would cry because the puppy got lost.", // 28.txt
-  "When would we visit the underwater castle?", // 29.txt
-  "We would visit it during our summer dream.", // 30.txt
-  "Where would you go if you had fairy wings?", // 31.txt
-  "I would fly to the rainbow island in sky.", // 32.txt
-  "How would we talk to a tiny forest elf?", // 33.txt
-  "We would whisper and use our magic ring.", // 34.txt
-  "Who would help if our kite got stuck again?", // 35.txt
-  "Dad would help us with his long stick.", // 36.txt
-  "What wouldn’t you eat even if you were hungry?", // 37.txt
-  "I wouldn’t eat broccoli ice cream, it’s yucky!", // 38.txt
-  "Why wouldn’t your teddy bear come to tea time?", // 39.txt
-  "He wouldn’t come because he was too sleepy.", // 40.txt
-  "When wouldn’t we go outside to play together?", // 41.txt
-  "We wouldn’t go if it started thunderstorming.", // 42.txt
-  "Where wouldn’t you hide your secret treasure box?", // 43.txt
-  "I wouldn’t hide it in the bathroom, too wet.", // 44.txt
-  "How wouldn’t the snowman melt so quickly today?", // 45.txt
-  "He wouldn’t melt if we built him in shade.", // 46.txt
-  "Who wouldn’t laugh at your funny dance moves?", // 47.txt
-  "Even the teacher wouldn’t stop laughing today.", // 48.txt
-  "What can you do with this shiny rock?", // 49.txt
-  "I can make it my secret magic stone.", // 50.txt
-  "Why can we not play outside right now?", // 51.txt
-  "It is raining and Mommy said it’s muddy.", // 52.txt
-  "When can I see your new puppy again?", // 53.txt
-  "You can come over after lunch tomorrow.", // 54.txt
-  "Where can we hide from the space aliens?", // 55.txt
-  "We can hide behind the big backyard tree.", // 56.txt
-  "Who can help me fix my toy robot?", // 57.txt
-  "My dad can fix it after his dinner.", // 58.txt
-  "How can you jump so high like that?", // 59.txt
-  "I practiced every day on my trampoline.", // 60.txt
-  "What can’t you eat before dinner time?", // 61.txt
-  "I can’t eat cookies before dinner time.", // 62.txt
-  "Why can’t you open the cookie jar?", // 63.txt
-  "I can’t open it because it’s locked tight.", // 64.txt
-  "When can’t we go into the kitchen?", // 65.txt
-  "We can’t go there when Mom is cooking.", // 66.txt
-  "Where can’t he hide the cookie crumbs?", // 67.txt
-  "He can’t hide them under the couch again.", // 68.txt
-  "Who can’t keep the cookie secret long?", // 69.txt
-  "She can’t keep secrets longer than two hours.", // 70.txt
-  "How can’t they hear the cookie crunch?", // 71.txt
-  "They can’t hear it with cartoons playing loudly.", // 72.txt
-  "What could you find under the big bed?", // 73.txt
-  "I could find my teddy bear under there.", // 74.txt
-  "Why could he be hiding from us now?", // 75.txt
-  "He could be scared of the vacuum cleaner noise.", // 76.txt
-  "When could we start looking for him?", // 77.txt
-  "We could start right after our afternoon snack.", // 78.txt
-  "Where could it have gone last night?", // 79.txt
-  "It could have rolled behind the toy chest.", // 80.txt
-  "Who could have taken it to the garden?", // 81.txt
-  "You could have taken it while playing outside.", // 82.txt
-  "How could we bring him back safely?", // 83.txt
-  "We could carry him in your superhero backpack.", // 84.txt
-  "What couldn’t we play with in the rain?", // 85.txt
-  "We couldn’t play with the paper kite outside.", // 86.txt
-  "Why couldn’t you come to my puppet show?", // 87.txt
-  "I couldn’t come because my boots were missing.", // 88.txt
-  "When couldn’t they start the backyard race?", // 89.txt
-  "They couldn’t start when the thunder was loud.", // 90.txt
-  "Where couldn’t she set up her lemonade stand?", // 91.txt
-  "She couldn’t set it up under the dripping tree.", // 92.txt
-  "Who couldn’t join us for the snack picnic?", // 93.txt
-  "He couldn’t join us because he caught a cold.", // 94.txt
-  "How couldn’t we keep our socks from getting wet?", // 95.txt
-  "We couldn’t keep them dry without rain boots on." // 96.txt
-*/
-
-// --- START: 모듈화된 한국어 번역 참조 ---
-const translations = GAME_TRANSLATIONS;
-// --- END: 모듈화된 한국어 번역 참조 ---
-
-// 기존 하드코딩된 번역들은 아래 주석으로 보존 (참고용)
-/*
-const translations_original = [
-  "이 큰 상자들로 무엇을 만들 건가요?", // 1.txt 번역 예시
-  "우리는 여행을 위한 우주선을 만들 거예요.", // 2.txt 번역 예시
-  "그들은 언제 뒷마당 파티에 올 건가요?", // 3.txt 번역 예시
-  "우리가 괴물과 싸우니까 그걸 입을 거예요.", // 4.txt 번역 예시
-  "그들은 언제 뒷마당 파티에 올 건가요?", // 5.txt 번역 예시
-  "낮잠 시간 바로 후에 올 거예요.", // 6.txt 번역 예시
-  "생일 깜짝 선물은 어디에 숨길 건가요?", // 7.txt 번역 예시
-  "큰 초록색 미끄럼틀 아래에 숨길 거예요.", // 8.txt 번역 예시
-  "오늘 소풍에 누가 케이크를 가져올 건가요?", // 9.txt 번역 예시
-  "엄마가 파란 바구니에 담아 가져오실 거예요.", // 10.txt 번역 예시
-  "작은 무지개 나비는 어떻게 잡을 건가요?", // 11.txt 번역 예시
-  "그물을 사용하고 아주 부드럽게 다룰 거예요.", // 12.txt 번역 예시
-  "오늘 점심 도시락에서 무엇을 나눠주지 않을 건가요?", // 13.txt 번역 예시
-  "내 젤리는 특별해서 나눠주지 않을 거예요.", // 14.txt 번역 예시
-  "언니는 왜 우리랑 술래잡기를 안 하나요?", // 15.txt 번역 예시
-  "너무 졸려서 안 할 거예요.", // 16.txt 번역 예시
-  "언제 놀이방 청소를 안 해도 되나요?", // 17.txt 번역 예시
-  "이미 깨끗하면 청소 안 할 거예요.", // 18.txt 번역 예시
-  "어디에 간식을 가져가면 안 되나요?", // 19.txt 번역 예시
-  "도서관에는 가져가지 않을 거예요.", // 20.txt 번역 예시
-  "내일 동물원에 누가 같이 안 가나요?", // 21.txt 번역 예시
-  "할아버지는 무릎 때문에 같이 안 가실 거예요.", // 22.txt 번역 예시
-  "장난감 자동차가 어떻게 하면 곧 다시 고장 나지 않을까요?", // 23.txt 번역 예시
-  "세게 부딪치지 않으면 고장 나지 않을 거예요.", // 24.txt 번역 예시
-  "하늘을 나는 양탄자가 있다면 무엇을 할 건가요?", // 25.txt 번역 예시
-  "할머니 댁에 쿠키 먹으러 날아갈 거예요.", // 26.txt 번역 예시
-  "그는 왜 그 영화를 보고 울었을까요?", // 27.txt 번역 예시
-  "강아지를 잃어버려서 울었을 거예요.", // 28.txt 번역 예시
-  "언제 수중 성을 방문할 건가요?", // 29.txt 번역 예시
-  "여름 꿈속에서 방문할 거예요.", // 30.txt 번역 예시
-  "요정 날개가 있다면 어디로 갈 건가요?", // 31.txt 번역 예시
-  "하늘에 있는 무지개 섬으로 날아갈 거예요.", // 32.txt 번역 예시
-  "작은 숲 속 요정과 어떻게 이야기할 건가요?", // 33.txt 번역 예시
-  "속삭이고 마법 반지를 사용할 거예요.", // 34.txt 번역 예시
-  "연이 다시 걸리면 누가 도와줄까요?", // 35.txt 번역 예시
-  "아빠가 긴 막대기로 도와주실 거예요.", // 36.txt 번역 예시
-  "배가 고파도 절대 먹지 않을 것은 무엇인가요?", // 37.txt 번역 예시
-  "브로콜리 아이스크림은 안 먹을 거예요, 맛없어요!", // 38.txt 번역 예시
-  "곰 인형은 왜 티타임에 오지 않았나요?", // 39.txt 번역 예시
-  "너무 졸려서 오지 않았을 거예요.", // 40.txt 번역 예시
-  "언제 밖에 나가서 같이 놀지 않을 건가요?", // 41.txt 번역 예시
-  "천둥 번개가 치기 시작하면 안 나갈 거예요.", // 42.txt 번역 예시
-  "비밀 보물 상자를 어디에 숨기지 않을 건가요?", // 43.txt 번역 예시
-  "화장실에는 숨기지 않을 거예요, 너무 축축해요.", // 44.txt 번역 예시
-  "눈사람이 오늘 어떻게 하면 빨리 녹지 않을까요?", // 45.txt 번역 예시
-  "그늘에 만들면 녹지 않을 거예요.", // 46.txt 번역 예시
-  "누가 당신의 웃긴 춤 동작을 보고 웃지 않을까요?", // 47.txt 번역 예시
-  "선생님조차도 오늘 웃음을 멈추지 못했을 거예요.", // 48.txt 번역 예시
-  "이 반짝이는 돌로 무엇을 할 수 있나요?", // 49.txt 번역 예시
-  "나의 비밀 마법 돌로 만들 수 있어요.", // 50.txt 번역 예시
-  "왜 지금 밖에 나가서 놀 수 없나요?", // 51.txt 번역 예시
-  "비가 오고 엄마가 진흙탕이라고 하셨어요.", // 52.txt 번역 예시
-  "언제 새 강아지를 다시 볼 수 있나요?", // 53.txt 번역 예시
-  "내일 점심 먹고 놀러 와도 돼요.", // 54.txt 번역 예시
-  "우주 외계인으로부터 어디에 숨을 수 있나요?", // 55.txt 번역 예시
-  "뒷마당 큰 나무 뒤에 숨을 수 있어요.", // 56.txt 번역 예시
-  "누가 내 장난감 로봇 고치는 것을 도와줄 수 있나요?", // 57.txt 번역 예시
-  "아빠가 저녁 식사 후에 고쳐주실 수 있어요.", // 58.txt 번역 예시
-  "어떻게 그렇게 높이 뛸 수 있나요?", // 59.txt 번역 예시
-  "매일 트램펄린에서 연습했어요.", // 60.txt 번역 예시
-  "저녁 식사 전에 무엇을 먹으면 안 되나요?", // 61.txt 번역 예시
-  "저녁 식사 전에는 쿠키를 먹을 수 없어요.", // 62.txt 번역 예시
-  "왜 쿠키 단지를 열 수 없나요?", // 63.txt 번역 예시
-  "단단히 잠겨 있어서 열 수 없어요.", // 64.txt 번역 예시
-  "언제 부엌에 들어가면 안 되나요?", // 65.txt 번역 예시
-  "엄마가 요리하실 때는 거기에 가면 안 돼요.", // 66.txt 번역 예시
-  "그는 쿠키 부스러기를 어디에 숨길 수 없나요?", // 67.txt 번역 예시
-  "소파 밑에는 다시 숨길 수 없을 거예요.", // 68.txt 번역 예시
-  "누가 쿠키 비밀을 오래 지키지 못하나요?", // 69.txt 번역 예시
-  "그녀는 두 시간 이상 비밀을 지키지 못해요.", // 70.txt 번역 예시
-  "그들은 어떻게 쿠키 바삭거리는 소리를 듣지 못할까요?", // 71.txt 번역 예시
-  "만화가 시끄럽게 틀어져 있어서 듣지 못해요.", // 72.txt 번역 예시
-  "큰 침대 밑에서 무엇을 찾을 수 있었나요?", // 73.txt 번역 예시
-  "거기서 내 곰 인형을 찾을 수 있었어요.", // 74.txt 번역 예시
-  "그는 왜 지금 우리에게서 숨어 있을까요?", // 75.txt 번역 예시
-  "진공청소기 소리를 무서워할 수도 있어요.", // 76.txt 번역 예시
-  "언제 그를 찾기 시작할 수 있을까요?", // 77.txt 번역 예시
-  "오후 간식 먹고 바로 시작할 수 있어요.", // 78.txt 번역 예시
-  "어젯밤에 그것은 어디로 갔을까요?", // 79.txt 번역 예시
-  "장난감 상자 뒤로 굴러갔을 수도 있어요.", // 80.txt 번역 예시
-  "누가 그것을 정원으로 가져갔을까요?", // 81.txt 번역 예시
-  "밖에서 놀다가 네가 가져갔을 수도 있어.", // 82.txt 번역 예시
-  "어떻게 그를 안전하게 데려올 수 있을까요?", // 83.txt 번역 예시
-  "너의 슈퍼히어로 배낭에 넣어 데려올 수 있어.", // 84.txt 번역 예시
-  "비 오는 날에는 무엇을 가지고 놀 수 없었나요?", // 85.txt 번역 예시
-  "종이 연은 밖에서 가지고 놀 수 없었어요.", // 86.txt 번역 예시
-  "왜 내 인형극에 오지 못했나요?", // 87.txt 번역 예시
-  "장화가 없어져서 오지 못했어요.", // 88.txt 번역 예시
-  "언제 그들은 뒷마당 경주를 시작할 수 없었나요?", // 89.txt 번역 예시
-  "천둥소리가 클 때는 시작할 수 없었어요.", // 90.txt 번역 예시
-  "그녀는 레모네이드 가판대를 어디에 설치할 수 없었나요?", // 91.txt 번역 예시
-  "물이 뚝뚝 떨어지는 나무 아래에는 설치할 수 없었어요.", // 92.txt 번역 예시
-  "누가 간식 소풍에 우리와 함께하지 못했나요?", // 93.txt 번역 예시
-  "그는 감기에 걸려서 우리와 함께하지 못했어요.", // 94.txt 번역 예시  "양말이 젖지 않게 하려면 어떻게 해야 했을까요?", // 95.txt 번역 예시
-  "장화를 신지 않고는 마른 상태로 유지할 수 없었어요." // 96.txt
+// --- START: ?덈줈??96媛??곸뼱 臾몄옣 ---
+const sentences = [
+  "Where will we find \nthose yummy berries?", // 1.txt
+  "We will swing on \nthat long vine!", // 2.txt
+  "Why will you choose \nthat wobbly vine?", // 3.txt
+  "It will be a super \nspeedy ride!", // 4.txt
+  "Who will go first \non the vine?", // 5.txt
+  "I will! I am the \nbravest penguin!", // 6.txt
+  "What will happen if \nthe vine breaks?", // 7.txt
+  "We will just bounce like \nrubber balls!", // 8.txt
+  "How will we get back \nif successful?", // 9.txt
+  "We will build a super \nberry raft!", // 10.txt
+  "When will we eat \nthose juicy berries?", // 11.txt
+  "We will eat them \nvery soon, yum!", // 12.txt
+  "Why won't our leaf glider fly \nhigh?", // 13.txt
+  "It won't fly with \nyour heavy stones!", // 14.txt
+  "What won't make it \ncrash then, smarty?", // 15.txt
+  "My fluffy tail \nwon't make it crash!", // 16.txt
+  "Who won't help me fix \nthis thing?", // 17.txt
+  "I won't help \nif you are grumpy!", // 18.txt
+  "Where won't we land \nif it breaks?", // 19.txt
+  "We won't land \nin the prickly bushes!", // 20.txt
+  "How won't we get \nall muddy then?", // 21.txt
+  "We won't, if \nwe steer very well!", // 22.txt
+  "When won't we reach \nthe flower field?", // 23.txt
+  "We won't, \nif this glider never flies!", // 24.txt
+  "Where would we sail \nthis little boat?", // 25.txt
+  "We would sail to \nCandy Island, yum!", // 26.txt
+  "What would we find \non Candy Island?", // 27.txt
+  "We would find rivers of \nchocolate there!", // 28.txt
+  "Why would there be \nchocolate rivers flowing?", // 29.txt
+  "Magic would make \nthe sweet rivers flow!", // 30.txt
+  "Who would be king \non Candy Island?", // 31.txt
+  "I would be the king, \nso kind!", // 32.txt
+  "How would you rule \nyour sweet yummy kingdom?", // 33.txt
+  "I would share candies \nwith everyone daily!", // 34.txt
+  "When would we have \nour candy feast?", // 35.txt
+  "We would feast as soon \nas we land!", // 36.txt
+  "Why wouldn't the bug share \nits light?", // 37.txt
+  "It wouldn't share; \nit was too shy!", // 38.txt
+  "What wouldn't make the bug \nhide more?", // 39.txt
+  "Big shouts wouldn't help \nit feel safe!", // 40.txt
+  "Who wouldn't love its pretty, \nwarm glow?", // 41.txt
+  "I wouldn't want to miss \nits sparkle!", // 42.txt
+  "Where wouldn't it like \nto glimmer brightly?", // 43.txt
+  "It wouldn't glimmer near \nthe grumpy toad!", // 44.txt
+  "How wouldn't we try \nto be friends?", // 45.txt
+  "We wouldn't poke it; \nwe would hum!", // 46.txt
+  "When wouldn't it be shy \nwith us?", // 47.txt
+  "It wouldn't be shy \nwith gentle friends!", // 48.txt
+  "Where can we test \nthis giant parachute?", // 49.txt
+  "We can jump from \nthis tall cliff!", // 50.txt
+  "Why can you be so brave \nnow?", // 51.txt
+  "I can be brave \nwith you, Toto!", // 52.txt
+  "Who can hold the parachute \nreally tight?", // 53.txt
+  "We can both hold it \nsuper tight!", // 54.txt
+  "What can we see \nfrom way up there?", // 55.txt
+  "We can see the whole \nwide jungle!", // 56.txt
+  "How can we land \nsoft like feathers?", // 57.txt
+  "We can steer towards \nthat big flowerbed!", // 58.txt
+  "When can we shout \nour big \"Hurray!\"", // 59.txt
+  "We can shout when \nwe land safely!", // 60.txt
+  "Why can't you climb \ndown this tree?", // 61.txt
+  "I can't look down; \nit's too high!", // 62.txt
+  "What can't we use \nto get down?", // 63.txt
+  "We can't use those flimsy, \nweak vines!", // 64.txt
+  "Who can't reach that big \nstrong branch?", // 65.txt
+  "I can't quite reach it, \nPingping!", // 66.txt
+  "Where can't we find \na softer landing?", // 67.txt
+  "We can't land \non those pointy rocks!", // 68.txt
+  "How can't we signal \nfor some help?", // 69.txt
+  "We can't shout loud; \nvoices are small!", // 70.txt
+  "When can't this tricky situation just end?", // 71.txt - ??臾몄옣留?以꾨컮轅??놁씠 ??以꾨줈
+  "It can't end \nif we don't try!", // 72.txt
+  "What could make \nthese giant footprints here?", // 73.txt
+  "A fluffy snow monster \ncould make them!", // 74.txt
+  "Why could it be hiding \nfrom us?", // 75.txt
+  "It could be shy, \nlike that Sparklebug!", // 76.txt
+  "Where could we search \nfor this creature?", // 77.txt
+  "We could search \ninside that icy cave!", // 78.txt
+  "Who could lead the way \ninto darkness?", // 79.txt
+  "I could! \nI am a brave penguin!", // 80.txt
+  "How could we become \nfriends with it?", // 81.txt
+  "We could offer it \nyummy fish snacks!", // 82.txt
+  "When could we see \nits happy face?", // 83.txt
+  "We could, \nif we are gentle and kind!", // 84.txt
+  "Why couldn't you cross \nthe wobbly bridge?", // 85.txt
+  "I couldn't balance; \nit wobbled too much!", // 86.txt
+  "What couldn't help us get \nacross safely?", // 87.txt
+  "That silly long stick \ncouldn't help us!", // 88.txt
+  "Who couldn't stop giggling \nat my slip?", // 89.txt
+  "I couldn't help it; \nyou looked funny!", // 90.txt
+  "Where couldn't we find \na better crossing?", // 91.txt
+  "We couldn't find one \nnear the waterfall!", // 92.txt
+  "How couldn't we just leap \nover it?", // 93.txt
+  "We couldn't leap; \nit is too wide!", // 94.txt
+  "When couldn't we try \na new plan?", // 95.txt
+  "We couldn't fail \nwith my new idea!" // 96.txt
 ];
-*/
+// --- END: ?덈줈??96媛??곸뼱 臾몄옣 ---
+
+
+// --- START: 새로운 96개 한국어 번역 (영어 문장과 정확히 일치) ---
+const translations = [
+  "우리는 어디서 그 맛있는 베리들을 찾을까요?", // 1.txt
+  "우리는 그 긴 덩굴을 타고 흔들 거예요!", // 2.txt
+  "왜 너는 그 흔들거리는 덩굴을 선택할 거니?", // 3.txt
+  "그것은 아주 빠른 속도의 타기가 될 거예요!", // 4.txt
+  "덩굴에서 누가 먼저 갈 거예요?", // 5.txt
+  "제가 할게요! 저는 가장 용감한 펭귄이에요!", // 6.txt
+  "만약 덩굴이 부러지면 어떻게 될까요?", // 7.txt
+  "우리는 그냥 고무공처럼 튕길 거예요!", // 8.txt
+  "성공하면 어떻게 돌아올까요?", // 9.txt
+  "우리는 슈퍼 베리 뗏목을 만들 거예요!", // 10.txt
+  "언제 우리는 그 즙이 많은 베리들을 먹을까요?", // 11.txt
+  "우리는 곧 그것들을 먹을 거예요, 맛있겠다!", // 12.txt
+  "왜 우리의 나뭇잎 글라이더가 높이 날지 않을까요?", // 13.txt
+  "네 무거운 돌들 때문에 날 수 없어요!", // 14.txt
+  "그럼 무엇이 그것을 추락시키지 않을까요, 똑똑이?", // 15.txt
+  "내 복슬복슬한 꼬리는 그것을 추락시키지 않을 거예요!", // 16.txt
+  "누가 이것을 고치는 것을 도와주지 않을 거예요?", // 17.txt
+  "네가 성질 부리면 도와주지 않을 거예요!", // 18.txt
+  "그것이 부서지면 우리는 어디에 착륙하지 않을까요?", // 19.txt
+  "우리는 가시 많은 덤불에 착륙하지 않을 거예요!", // 20.txt
+  "그럼 우리는 어떻게 진흙투성이가 되지 않을까요?", // 21.txt
+  "우리가 아주 잘 조종한다면 안 될 거예요!", // 22.txt
+  "언제 우리는 꽃밭에 도달하지 못할까요?", // 23.txt
+  "이 글라이더가 절대 날지 않는다면 도달하지 못할 거예요!", // 24.txt
+  "우리는 이 작은 보트를 어디로 항해할까요?", // 25.txt
+  "우리는 캔디 아일랜드로 항해할 거예요, 맛있겠다!", // 26.txt
+  "캔디 아일랜드에서 무엇을 발견할까요?", // 27.txt
+  "우리는 거기서 초콜릿 강을 발견할 거예요!", // 28.txt
+  "왜 그곳에 초콜릿 강이 흐를까요?", // 29.txt
+  "마법이 달콤한 강들이 흐르게 만들 거예요!", // 30.txt
+  "캔디 아일랜드에서는 누가 왕이 될까요?", // 31.txt
+  "제가 왕이 될 거예요, 너무 친절한 왕이요!", // 32.txt
+  "당신은 어떻게 달콤한 왕국을 다스릴 건가요?", // 33.txt
+  "저는 매일 모두에게 사탕을 나눠 줄 거예요!", // 34.txt
+  "언제 우리는 캔디 축제를 열까요?", // 35.txt
+  "우리는 착륙하자마자 축제를 열 거예요!", // 36.txt
+  "왜 벌레는 자기 빛을 나눠주지 않을까요?", // 37.txt
+  "너무 수줍음이 많아서 나눠주지 않을 거예요!", // 38.txt
+  "무엇이 벌레를 더 숨게 하지 않을까요?", // 39.txt
+  "큰 소리는 그것이 안전하다고 느끼게 도와주지 않을 거예요!", // 40.txt
+  "누가 그 예쁘고 따뜻한 빛을 좋아하지 않을까요?", // 41.txt
+  "저는 그 반짝임을 놓치고 싶지 않아요!", // 42.txt
+  "그것은 어디서 밝게 빛나고 싶지 않을까요?", // 43.txt
+  "그것은 성질 나쁜 두꺼비 근처에서 빛나지 않을 거예요!", // 44.txt
+  "어떻게 우리는 친구가 되려고 시도하지 않을까요?", // 45.txt
+  "우리는 그것을 찌르지 않고 허밍을 할 거예요!", // 46.txt
+  "언제 그것은 우리와 함께 수줍어하지 않을까요?", // 47.txt
+  "그것은 부드러운 친구들과 함께 수줍어하지 않을 거예요!", // 48.txt
+  "어디서 우리는 이 거대한 낙하산을 테스트할 수 있을까요?", // 49.txt
+  "우리는 이 높은 절벽에서 뛰어내릴 수 있어요!", // 50.txt
+  "왜 너는 지금 그렇게 용감할 수 있니?", // 51.txt
+  "저는 토토와 함께 있으면 용감해질 수 있어요!", // 52.txt
+  "누가 낙하산을 정말 꽉 잡을 수 있을까요?", // 53.txt
+  "우리 둘 다 그것을 아주 꽉 잡을 수 있어요!", // 54.txt
+  "저 위에서 무엇을 볼 수 있을까요?", // 55.txt
+  "우리는 넓은 정글 전체를 볼 수 있어요!", // 56.txt
+  "어떻게 우리는 깃털처럼 부드럽게 착륙할 수 있을까요?", // 57.txt
+  "우리는 저 큰 꽃밭 쪽으로 방향을 조종할 수 있어요!", // 58.txt
+  "언제 우리는 큰 \"만세!\"를 외칠 수 있을까요?", // 59.txt
+  "우리는 안전하게 착륙했을 때 외칠 수 있어요!", // 60.txt
+  "왜 너는 이 나무에서 내려올 수 없니?", // 61.txt
+  "저는 아래를 볼 수 없어요; 너무 높아요!", // 62.txt
+  "내려오기 위해 우리가 무엇을 사용할 수 없을까요?", // 63.txt
+  "우리는 그 얇고 약한 덩굴들을 사용할 수 없어요!", // 64.txt
+  "누가 저 큰 튼튼한 가지에 닿을 수 없을까요?", // 65.txt
+  "저는 닿을 수 없어요, 핑핑!", // 66.txt
+  "어디서 우리는 더 부드러운 착륙 지점을 찾을 수 없을까요?", // 67.txt
+  "우리는 저 뾰족한 바위들에 착륙할 수 없어요!", // 68.txt
+  "어떻게 우리는 도움을 요청할 신호를 보낼 수 없을까요?", // 69.txt
+  "우리는 크게 소리칠 수 없어요; 목소리가 작아요!", // 70.txt
+  "이 까다로운 상황은 언제 끝날 수 없을까요?", // 71.txt
+  "우리가 시도하지 않으면 끝날 수 없어요!", // 72.txt
+  "무엇이 이 거대한 발자국들을 여기에 남길 수 있을까요?", // 73.txt
+  "복슬복슬한 눈 괴물이 그것들을 만들 수 있었을 거예요!", // 74.txt
+  "왜 그것이 우리로부터 숨을 수 있을까요?", // 75.txt
+  "그것은 저 반짝 벌레처럼 수줍음이 많을 수 있어요!", // 76.txt
+  "어디서 우리는 이 생물을 찾을 수 있을까요?", // 77.txt
+  "우리는 저 얼음 동굴 안에서 찾을 수 있을 거예요!", // 78.txt
+  "누가 어둠 속으로 길을 인도할 수 있을까요?", // 79.txt
+  "제가 할게요! 저는 용감한 펭귄이에요!", // 80.txt
+  "어떻게 우리는 그것과 친구가 될 수 있을까요?", // 81.txt
+  "우리는 맛있는 생선 간식을 줄 수 있어요!", // 82.txt
+  "언제 우리는 그것의 행복한 얼굴을 볼 수 있을까요?", // 83.txt
+  "우리가 부드럽고 친절하다면 볼 수 있을 거예요!", // 84.txt
+  "왜 너는 흔들거리는 다리를 건널 수 없었니?", // 85.txt
+  "저는 균형을 잡을 수 없었어요; 너무 많이 흔들렸어요!", // 86.txt
+  "무엇이 우리가 안전하게 건너는 것을 도울 수 없었을까요?", // 87.txt
+  "그 바보 같은 긴 막대기는 우리를 도울 수 없었어요!", // 88.txt
+  "누가 내가 미끄러졌을 때 웃음을 멈출 수 없었나요?", // 89.txt
+  "저는 참을 수 없었어요; 너 정말 우스꽝스러웠어요!", // 90.txt
+  "어디서 우리는 더 나은 건널 곳을 찾을 수 없었나요?", // 91.txt
+  "우리는 폭포 근처에서 찾을 수 없었어요!", // 92.txt
+  "어떻게 우리는 그냥 뛰어넘을 수 없었을까요?", // 93.txt
+  "우리는 뛰어넘을 수 없었어요; 너무 넓었어요!", // 94.txt
+  "언제 우리는 새 계획을 시도할 수 없었을까요?", // 95.txt
+  "제 새 아이디어로는 실패할 수 없었어요!" // 96.txt
+];
+// --- END: 새로운 96개 한국어 번역 ---
 
 
 let sentenceIndex = Number(localStorage.getItem('sentenceIndex') || 0);
@@ -419,8 +415,8 @@ const PETAL_DRIFT_X_PPS_BASE = 30;
 const PETAL_FLUTTER_AMPLITUDE_BASE = 3.5;
 const PETAL_FLUTTER_SPEED_BASE = 3.0;
 
-const SENTENCE_VERTICAL_ADJUSTMENT = -86 + 100; // 100px 아래로 이동 (14)
-const ANSWER_OFFSET_Y = 72; // 답변 문장을 위로 10px 이동 (82에서 72로)
+const SENTENCE_VERTICAL_ADJUSTMENT = 4; // -86 + 70 + 20 = 4 (90px 아래로 이동)
+const ANSWER_OFFSET_Y = 82;
 const LINE_HEIGHT = 30;
 const PLAYER_TOUCH_Y_OFFSET = 15;
 
@@ -432,6 +428,9 @@ let detachedPetals = [];
 
 let isGameRunning = false;
 let isGamePaused = false;
+
+// 패턴 감지 전역 변수
+window.lastDetectedPattern = "unknown";
 let lastTime = 0;
 
 const burstColors = [
@@ -465,86 +464,150 @@ let wordTranslationTimeoutId = null;
 const WORD_TRANSLATION_DURATION = 3000;
 
 const MODAL_AUX = [
-  "can", "cant", "cannot", "could", "couldnt", "will", "would", "shall", "should",
-  "may", "might", "must", "wont", "wouldnt", "shant", "shouldnt", "maynt", "mightnt", "mustnt"
+  // 기본형
+  "can", "could", "will", "would", "shall", "should", "may", "might", "must",
+  // 축약형 (아포스트로피 없는 버전)
+  "cant", "couldnt", "wont", "wouldnt", "shant", "shouldnt", "maynt", "mightnt", "mustnt",
+  // 축약형 (아포스트로피 있는 버전)
+  "can't", "couldn't", "won't", "wouldn't", "shan't", "shouldn't", "mayn't", "mightn't", "mustn't",
+  // 기타 변형
+  "cannot"
 ];
 const DO_AUX = [
-  "do", "does", "did", "dont", "doesnt", "didnt"
+  // 기본형
+  "do", "does", "did", 
+  // 축약형 (아포스트로피 없는 버전)
+  "dont", "doesnt", "didnt",
+  // 축약형 (아포스트로피 있는 버전)
+  "don't", "doesn't", "didn't"
 ];
 const notVerbIng = [
   "morning", "evening", "everything", "anything", "nothing", "something",
   "building", "ceiling", "meeting", "feeling", "wedding", "clothing"
 ];
 
+// 특별한 축약형 조동사 목록
+const CONTRACTION_AUX = [
+  "wont", "wouldnt", "cant", "couldnt", "dont", "doesnt", "didnt"
+];
+
 function isAux(word) {
+  // 단어의 가능한 모든 형태를 확인하도록 정규화
   const lowerWord = word.toLowerCase().replace(/[^a-z0-9']/g, '');
-  return MODAL_AUX.includes(lowerWord) || DO_AUX.includes(lowerWord);
-}
-
-// 조동사 부정어(auxiliary verb contractions) 인식 함수
-function isAuxiliaryContraction(word) {
-  const lowerWord = word.toLowerCase().replace(/[^a-z0-9']/g, '');
-  const auxiliaryContractions = [
-    "won't", "wont", "wouldn't", "wouldnt", "can't", "cant", "cannot",
-    "couldn't", "couldnt", "shouldn't", "shouldnt", "mustn't", "mustnt",
-    "don't", "dont", "doesn't", "doesnt", "didn't", "didnt",
-    "isn't", "isnt", "aren't", "arent", "wasn't", "wasnt", "weren't", "werent",
-    "haven't", "havent", "hasn't", "hasnt", "hadn't", "hadnt"
-  ];
-  return auxiliaryContractions.includes(lowerWord);
-}
-
-// 주어인지 판단하는 함수 (의문사, 조동사, 동사가 아닌 단어)
-function isSubject(word) {
-  const lowerWord = word.toLowerCase().replace(/[^a-z0-9']/g, '');
+  const lowerWordWithoutApostrophes = lowerWord.replace(/'/g, '');
   
-  // 의문사, 조동사, 동사가 아니면 주어로 간주
-  if (isWh(lowerWord) || isAux(lowerWord) || isVerb(lowerWord) || isAuxiliaryContraction(lowerWord)) {
-    return false;
-  }
-  
-  // 일반적인 주어 단어들
-  const commonSubjects = [
-    "i", "you", "he", "she", "it", "we", "they", "this", "that", "these", "those",
-    "mom", "dad", "teacher", "student", "boy", "girl", "man", "woman", "people",
-    "children", "kids", "baby", "puppy", "cat", "dog", "bird", "car", "house",
-    "school", "book", "toy", "game", "ball", "cake", "cookie", "water", "milk"
-  ];
-    return commonSubjects.includes(lowerWord) || lowerWord.length > 0;
-}
-
-// 현재 위치 이전에 조동사가 있는지 확인하는 함수 (첫 번째 줄에서만)
-function hasAuxiliaryBefore(words, currentIndex) {
-  for (let i = currentIndex - 1; i >= 0; i--) {
-    const word = words[i].toLowerCase().replace(/[^a-z0-9']/g, '');
-    if (isAux(word) || isAuxiliaryContraction(word)) {
-      return true; // 조동사를 찾음
-    }
-    // 동사를 만나면 중단 (주어 영역이 끝남)
-    if (isVerb(word) && !isAux(word) && !isAuxiliaryContraction(word)) {
-      break;
-    }
-  }
-  return false; // 조동사를 찾지 못함
+  // 모든 조동사 목록을 체계적으로 확인 (모듈화)
+  return MODAL_AUX.includes(lowerWord) || 
+         DO_AUX.includes(lowerWord) || 
+         MODAL_AUX.includes(lowerWordWithoutApostrophes) || 
+         DO_AUX.includes(lowerWordWithoutApostrophes) ||
+         // 특별한 축약형 조동사 체크
+         CONTRACTION_AUX.includes(lowerWord);
 }
 function isWh(word) {
   const whs = ["what","when","where","who","whom","whose","which","why","how"];
   return whs.includes(word.toLowerCase().replace(/[^a-z0-9]/g, ''));
 }
+// 동사 목록을 별도로 모듈화하여 관리
+const BASIC_VERBS = [
+  // 기본 동사들
+  "build", "make", "come", "wear", "fight", "hide", "bring", "catch", "use", "share", "play", "feel", "clean",
+  "allowed", "join", "break", "crash", "fly", "cry", "got", "lost", "visit", "talk", "help", "stuck", "eat",
+  "go", "melt", "laugh", "see", "fix", "jump", "practiced", "open", "hear", "find", "hiding", "start",
+  "taken", "rolled", "carry", "set", "keep"
+];
+
+const BE_VERBS = [
+  // BE 동사들
+  "be", "is", "am", "are", "was", "were", "been"
+];
+
+const ADDITIONAL_VERBS = [
+  // 새로 추가된 동사들
+  "land", "signal", "sail", "cross", "climb", "reach", "leap", "fail", "shout", "steer", "search", "lead", 
+  "become", "offer", "balance", "stop", "giggling", "try", "poke", "hum", "test", "look", 
+  "hold", "end", "swing", "choose", "ride", "care", "put", "left", "liked",
+  "get", "locked", "cooking", "whisper", "let", "sit"
+];
+
+// 새 문장에 필요한 동사들
+const NEW_VERBS = [
+  "drink", "wonder", "speed", "change", "show", "split", "pour", "drive", "pick",
+  "bake", "wait", "need", "believe", "bark", "skip", "roar", "leave",
+  "stay", "blow", "run", "tell", "teach"
+];
+
+// 본동사 우선순위 목록 (일반적으로 문장에서 주요 동작을 나타내는 동사들)
+const MAIN_VERB_PRIORITY = [
+  // 움직임/행동 동사
+  "run", "jump", "walk", "swim", "fly", "climb", "ride", "drive", 
+  // 생성/파괴 동사
+  "make", "build", "create", "destroy", "break",
+  // 일반적인 중요 행동
+  "eat", "drink", "sleep", "read", "write", "play", "work",
+  // 소통 동사
+  "say", "tell", "speak", "talk", "shout", "whisper",
+  // 기타 주요 동작
+  "bring", "carry", "catch", "find", "give", "take", "put", "set"
+];
+
+// 동사가 아닌 단어들 확장 (방향, 전치사, 부사 등)
+const NOT_VERBS = [
+  "down", "up", "in", "out", "off", "on", "over", "under", "there", "here", "away", "back", 
+  "again", "now", "then", "just", "very", "too", "more", "most", "some", "any", "all", "none",
+  "the", "a", "an", "this", "that", "these", "those", "my", "your", "his", "her", "our", "their",
+  "today", "tomorrow", "yesterday", "after", "before", "during"
+];
+
+// 일반 동사 여부 확인 (모든 종류의 동사 포함)
 function isVerb(word) {
-  const verbs = [
-    "build", "make", "come", "wear", "fight", "hide", "bring", "catch", "use", "share", "play", "feel", "clean",
-    "allowed", "join", "break", "crash", "do", "fly", "cry", "got", "lost", "visit", "talk", "help", "stuck", "eat",
-    "go", "melt", "laugh", "can", "see", "fix", "jump", "practiced", "open", "hear", "find", "hiding", "start",
-    "taken", "rolled", "bring", "carry", "set", "keep",
-    "be", "is", "am", "are", "was", "were", // "was", "were" 추가
-    // 새로운 베리/덩굴/펭귄 문장들에서 누락된 동사들 추가
-    "get", "choose", "happen", "swing", "bounce", "build", "waddle"
-  ];
+  // 모든 동사 목록을 합침
+  const allVerbs = [...BASIC_VERBS, ...BE_VERBS, ...ADDITIONAL_VERBS, ...NEW_VERBS];
+  
   const lowerWord = word.toLowerCase().replace(/[^a-z0-9]/g, '');
+  
+  // 조동사인지 먼저 확인 (조동사는 동사로 처리하지 않음)
+  if (isAux(lowerWord)) return false;
+  
+  // 동사가 아닌 단어인지 확인
+  if (NOT_VERBS.includes(lowerWord)) return false;
+  
+  // 특수 케이스
   if (lowerWord === "bringback") return true;
   if (lowerWord === "setup") return true;
-  return verbs.some(v => lowerWord === v || lowerWord.startsWith(v));
+  
+  // 포괄적 동사 체크 (완전 일치 또는 접두어 일치)
+  return allVerbs.some(v => lowerWord === v || lowerWord.startsWith(v));
+}
+
+// 본동사 식별 함수 (문장에서 가장 중요한 동작을 나타내는 동사)
+function isMainVerb(word, wordIndex, totalWords) {
+  const lowerWord = word.toLowerCase().replace(/[^a-z0-9]/g, '');
+  
+  // 조동사는 본동사가 아님
+  if (isAux(lowerWord)) return false;
+  
+  // 위치 기반 점수 계산 (문장의 첫 번째 동사일 가능성이 높음)
+  let score = 0;
+  if (wordIndex === 1) score += 2; // 두 번째 단어일 경우 (조동사 다음)
+  if (wordIndex === 2) score += 1; // 세 번째 단어일 경우 
+  
+  // 우선순위 동사 목록에 있는지 확인
+  const mainVerbPriority = MAIN_VERB_PRIORITY.findIndex(v => 
+    lowerWord === v || lowerWord.startsWith(v)
+  );
+  
+  if (mainVerbPriority !== -1) {
+    score += (MAIN_VERB_PRIORITY.length - mainVerbPriority) / MAIN_VERB_PRIORITY.length * 3;
+  }
+  
+  // 일반 동사인지 확인
+  if (isVerb(word)) {
+    score += 1;
+  } else {
+    return false; // 동사가 아니면 본동사가 될 수 없음
+  }  
+  return score >= 1; // 점수가 1 이상이면 본동사로 간주
 }
 function isVing(word) {
   let lw = word.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -605,7 +668,6 @@ function isPastParticiple(word) {
 async function getWordTranslation(word, targetLang = 'ko') {
   const cleanedWord = word.replace(/[^a-zA-Z0-9']/g, "").toLowerCase().trim();
   if (!cleanedWord) return "Error: Invalid word";
-
   // =======================================================================
   // START OF FULLY UPDATED mockTranslations (반드시 이 부분을 사용해주세요)
   // =======================================================================
@@ -709,17 +771,265 @@ async function getWordTranslation(word, targetLang = 'ko') {
     "hadn’t": "～한 적이 없었다 (과거완료)", "hadnt": "～한 적이 없었다 (과거완료)",
     "isn’t": "～이 아니다", "isnt": "～이 아니다",
     "aren’t": "～들이 아니다", "arent": "～들이 아니다",
-    "dreamed": "꿈꿨다", "dreamt": "꿈꿨다"
-  };
-  // =======================================================================
+    "dreamed": "꿈꿨다", "dreamt": "꿈꿨다",
+    "giggling": "킥킥 웃는",
+    "slip": "미끄러짐/실수",
+    "at": "~에서/~에게",
+    "help": "돕다/도움",
+    "looked": "보였다",
+    "funny": "웃기는/재미있는"
+  };  // =======================================================================
   // END OF FULLY UPDATED mockTranslations
   // =======================================================================
-
+  
   if (mockTranslations[cleanedWord]) {
     return mockTranslations[cleanedWord];
   }
+  
+  // 새로운 단어 사전에서 단어 찾기
+  const koreanWordDictionary = {
+    "a": "하나의", 
+    "all": "모든",
+    "am": "~이다 (I am)",
+    "are": "~이다 (you/we/they are)",
+    "as": "~하자마자",
+    "at": "~에",
+    "back": "돌아오다",
+    "balance": "균형을 잡다",
+    "balls": "공들",
+    "be": "~이다, 되다",
+    "become": "~이 되다",
+    "berries": "베리류 (산딸기 등)",
+    "better": "더 나은",
+    "big": "큰",
+    "boat": "보트",
+    "both": "둘 다",
+    "bounce": "튀다",
+    "bravest": "가장 용감한",
+    "breaks": "부서지다",
+    "bridge": "다리",
+    "bug": "벌레",
+    "build": "짓다, 만들다",
+    "bushes": "덤불들",
+    "can": "~할 수 있다",
+    "can't": "~할 수 없다",
+    "cannot": "~할 수 없다",
+    "candies": "사탕들",
+    "candy": "사탕",
+    "cave": "동굴",
+    "choose": "선택하다",
+    "chocolate": "초콜릿",
+    "climb": "오르다",
+    "cliff": "절벽",
+    "could": "~할 수 있었다",
+    "couldn't": "~할 수 없었다",
+    "crash": "충돌하다",
+    "cross": "건너다",
+    "crossing": "건널목",
+    "daily": "매일",
+    "darkness": "어둠",
+    "don't": "~하지 않다",
+    "down": "아래로",
+    "eat": "먹다",
+    "end": "끝나다",
+    "everyone": "모두",
+    "face": "얼굴",
+    "fail": "실패하다",
+    "feast": "축제, 잔치",
+    "feathers": "깃털들",
+    "feel": "느끼다",
+    "field": "들판",
+    "find": "찾다",
+    "first": "첫 번째로",
+    "fish": "물고기",
+    "fix": "고치다",
+    "flies": "날다 (3인칭 단수)",
+    "flimsy": "약한, 얄팍한",
+    "flow": "흐르다",
+    "flower": "꽃",
+    "flowerbed": "화단",
+    "fluffy": "푹신한, 솜털 같은",
+    "fly": "날다",
+    "footprints": "발자국들",
+    "for": "~을 위해",
+    "friends": "친구들",
+    "from": "~로부터",
+    "funny": "웃기는",
+    "gentle": "부드러운",
+    "get": "얻다, 되다",
+    "giant": "거대한",
+    "giggling": "킥킥거리는",
+    "glider": "글라이더",
+    "glimmer": "희미하게 빛나다",
+    "glow": "빛나다",
+    "go": "가다",
+    "grumpy": "심술궂은",
+    "happen": "일어나다, 발생하다",
+    "happy": "행복한",
+    "heavy": "무거운",
+    "help": "돕다",
+    "here": "여기에",
+    "hide": "숨다",
+    "hiding": "숨어있는",
+    "high": "높이",
+    "hold": "잡다",
+    "how": "어떻게",
+    "hum": "콧노래를 부르다",
+    "hurray": "만세",
+    "i": "나",
+    "icy": "얼음의, 몹시 찬",
+    "idea": "생각, 아이디어",
+    "if": "만약 ~라면",
+    "in": "~안에",
+    "inside": "~안에",
+    "into": "~안으로",
+    "is": "~이다",
+    "island": "섬",
+    "it": "그것",
+    "its": "그것의",
+    "juicy": "즙이 많은",
+    "jump": "점프하다",
+    "jungle": "정글",
+    "just": "그냥, 단지",
+    "kind": "친절한",
+    "king": "왕",
+    "kingdom": "왕국",
+    "land": "착륙하다, 땅",
+    "lead": "이끌다",
+    "leaf": "잎",
+    "leap": "뛰어넘다",
+    "light": "빛",
+    "like": "~처럼",
+    "little": "작은",
+    "long": "긴",
+    "look": "보다",
+    "looked": "보였다",
+    "love": "사랑하다",
+    "magic": "마법",
+    "make": "만들다",
+    "me": "나를",
+    "miss": "놓치다",
+    "monster": "괴물",
+    "more": "더",
+    "much": "많이",
+    "muddy": "진흙투성이의",
+    "my": "나의",
+    "near": "~근처에",
+    "never": "결코 ~않다",
+    "new": "새로운",
+    "now": "지금",
+    "of": "~의",
+    "offer": "제공하다",
+    "on": "~위에",
+    "our": "우리의",
+    "over": "~위로",
+    "parachute": "낙하산",
+    "penguin": "펭귄",
+    "pingping": "핑핑 (이름)",
+    "poke": "찌르다",
+    "pointy": "뾰족한",
+    "pretty": "예쁜",
+    "prickly": "뾰족뾰족한, 가시가 많은",
+    "quite": "꽤",
+    "raft": "뗏목",
+    "reach": "도착하다",
+    "really": "정말로",
+    "ride": "타기, 탑승",
+    "rivers": "강들",
+    "rocks": "바위들",
+    "rubber": "고무",
+    "rule": "다스리다",
+    "safe": "안전한",
+    "safely": "안전하게",
+    "sail": "항해하다",
+    "search": "찾다",
+    "see": "보다",
+    "share": "나누다",
+    "shout": "외치다",
+    "shouts": "외침",
+    "shy": "수줍어하는",
+    "signal": "신호를 보내다",
+    "silly": "어리석은",
+    "situation": "상황",
+    "slip": "미끄러짐",
+    "small": "작은",
+    "smarty": "똑똑한 체하는 사람",
+    "snacks": "간식",
+    "snow": "눈",
+    "so": "그래서, 매우",
+    "soft": "부드러운",
+    "some": "약간의",
+    "soon": "곧",
+    "sparkle": "반짝임",
+    "sparklebug": "스파클버그 (이름)",
+    "speedy": "빠른",
+    "steer": "조종하다",
+    "stick": "막대기",
+    "stones": "돌들",
+    "stop": "멈추다",
+    "successful": "성공적인",
+    "super": "아주, 엄청난",
+    "sweet": "달콤한",
+    "swing": "흔들리다, 그네를 타다",
+    "tail": "꼬리",
+    "tall": "키가 큰",
+    "test": "시험하다",
+    "that": "저것, 그것",
+    "the": "그",
+    "them": "그것들을",
+    "then": "그러면",
+    "there": "거기에",
+    "these": "이것들",
+    "thing": "것",
+    "this": "이것",
+    "those": "저, 그",
+    "tight": "꽉",
+    "to": "~로",
+    "toad": "두꺼비",
+    "toto": "토토 (이름)",
+    "towards": "~쪽으로",
+    "tree": "나무",
+    "tricky": "까다로운",
+    "try": "시도하다",
+    "too": "너무",
+    "us": "우리를",
+    "use": "사용하다",
+    "very": "매우",
+    "vine": "덩굴",
+    "vines": "덩굴들",
+    "voices": "목소리들",
+    "want": "원하다",
+    "warm": "따뜻한",
+    "was": "~였다",
+    "waterfall": "폭포",
+    "way": "길",
+    "we": "우리",
+    "weak": "약한",
+    "well": "잘",
+    "what": "무엇",
+    "when": "언제",
+    "where": "어디에",
+    "who": "누구",
+    "whole": "전체의",
+    "why": "왜",
+    "wide": "넓은",
+    "will": "~할 것이다",
+    "with": "~와 함께",
+    "wobbly": "흔들거리는",
+    "won't": "~하지 않을 것이다",
+    "would": "~할 것이다 (가정)",
+    "wouldn't": "~하지 않을 것이다 (가정)",
+    "you": "너, 당신",
+    "your": "너의",
+    "yummy": "맛있는"
+  };
+  
+  if (koreanWordDictionary[cleanedWord]) {
+    return koreanWordDictionary[cleanedWord];
+  }
+  
   console.warn(`[번역 누락] '${cleanedWord}'의 한글 뜻을 mockTranslations에 추가해주세요.`);
-  return `[${cleanedWord}]`;
+  return cleanedWord; // 괄호 없이 원래 단어 그대로 반환
 }
 
 let voicesPromise = null;
@@ -868,68 +1178,210 @@ const englishFont = "21.168px Arial";
 const translationFont = "17.0px Arial";
 
 // =======================================================================
-// START OF MODIFIED splitSentence FUNCTION - 첫째 줄 4단위 고정 (관사+명사 = 1단위)
+// START OF MODIFIED splitSentence FUNCTION
 // =======================================================================
 function splitSentence(sentenceText, isCurrentlyQuestion = null) {
     if (!sentenceText) return ["", ""];
+    
+    // 명시적 줄바꿈이 있는 경우 그대로 사용
+    if (sentenceText.includes('\n')) {
+        const parts = sentenceText.split('\n');
+        return [parts[0].trim(), (parts[1] || "").trim()];
+    }
+    
     const words = sentenceText.trim().split(" ");
     const originalSentenceForShortCheck = sentenceText.trim();
 
-    console.log("🔍 Splitting sentence:", sentenceText);
-    console.log("🔍 Original words:", words);
-      // 🎯 관사 + 명사, not + 동사를 하나의 단위로 묶기
-    const combinedUnits = [];
-    let i = 0;
+    let line1Words = [];
+    let line2Words = [];    // 의문사+조동사+주어+동사 패턴 확인 및 특별 처리
+    console.log("🔍 Checking splitSentence for:", sentenceText);
+    console.log("🔍 Words:", words);
+    console.log("🔍 isCurrentlyQuestion:", isCurrentlyQuestion);
     
-    while (i < words.length) {
-        const currentWord = words[i].toLowerCase().replace(/[^a-z]/g, '');
+    const firstWordClean = words.length > 0 ? words[0].toLowerCase().replace(/[^a-z0-9']/g, "") : "";
+    const secondWordClean = words.length > 1 ? words[1].toLowerCase().replace(/[^a-z0-9']/g, "") : "";
+    
+    console.log("🔍 First word clean:", firstWordClean, "isWh:", isWh(firstWordClean));
+    console.log("🔍 Second word clean:", secondWordClean, "isAux:", isAux(secondWordClean));
+    
+    const isQuestionWordAuxSubjectVerbForm = isCurrentlyQuestion !== false && 
+        words.length >= 4 && 
+        isWh(firstWordClean) &&
+        isAux(secondWordClean);
+    
+    console.log("🔍 Pattern match result:", isQuestionWordAuxSubjectVerbForm);    if (isQuestionWordAuxSubjectVerbForm) {
+        // 의문사+조동사+주어+동사 패턴에서는 최소 4개 단어까지 첫째 줄에 포함
+        // 추가로 동사를 찾아서 동사까지 포함시킴
+        let verbIndex = 3; // 최소 4번째 단어(인덱스 3)까지는 포함
         
-        // 관사인지 확인 (a, an, the)
-        if ((currentWord === 'a' || currentWord === 'an' || currentWord === 'the') && i + 1 < words.length) {
-            // 관사 + 다음 단어를 하나의 단위로 묶기
-            const combinedUnit = words[i] + " " + words[i + 1];
-            combinedUnits.push(combinedUnit);
-            console.log("📦 Combined unit (article + noun):", combinedUnit);
-            i += 2; // 두 단어를 처리했으므로 2 증가
-        } else if (currentWord === 'not' && i + 1 < words.length) {
-            // "not" + 다음 단어가 동사인지 확인
-            const nextWord = words[i + 1].toLowerCase().replace(/[^a-z0-9']/g, '');
-            if (isVerb(nextWord)) {
-                // not + 동사를 하나의 단위로 묶기
-                const combinedUnit = words[i] + " " + words[i + 1];
-                combinedUnits.push(combinedUnit);
-                console.log("📦 Combined unit (not + verb):", combinedUnit);
-                i += 2; // 두 단어를 처리했으므로 2 증가
-            } else {
-                // "not" 다음이 동사가 아니면 그대로 추가
-                combinedUnits.push(words[i]);
-                i += 1;
+        for (let i = 3; i < words.length; i++) {
+            const word = words[i].toLowerCase().replace(/[^a-z0-9']/g, "");
+            console.log("🔍 Checking word at index", i, ":", word, "isVerb:", isVerb(word), "isAux:", isAux(word));
+            
+            // 특별 케이스: "do"는 의문문에서 일반동사로 취급
+            const isMainVerb = (isVerb(word) && !isAux(word)) || 
+                               (word === "do" && i > 1); // 2번째 위치 이후의 "do"는 일반동사
+            
+            if (isMainVerb) {
+                verbIndex = i;
+                console.log("✅ Found verb at index", i, ":", word);
+                break;
             }
-        } else {
-            // 일반 단어는 그대로 추가
-            combinedUnits.push(words[i]);
-            i += 1;
         }
-    }    console.log("✅ Combined units:", combinedUnits);
-    console.log("🔢 Total units:", combinedUnits.length);
-    
-    let line1Units = [];
-    let line2Units = [];
-    
-    // 🎯 기본 규칙: 첫째 줄에 4개 단위 (not+동사는 이미 하나의 단위로 처리됨)
-    if (combinedUnits.length <= 4) {
-        // 4개 이하의 단위는 모두 첫째 줄에
-        line1Units = combinedUnits.slice();
-        line2Units = [];
-    } else {
-        // 4개 이상이면 첫 4개는 첫째 줄, 나머지는 둘째 줄
-        line1Units = combinedUnits.slice(0, 4);
-        line2Units = combinedUnits.slice(4);
+        
+        // 동사까지 또는 최소 4개 단어까지 첫째 줄에 포함
+        line1Words = words.slice(0, verbIndex + 1);
+        line2Words = words.slice(verbIndex + 1);        console.log("🎯 Question word + aux + subject + verb pattern detected, forcing verb to line 1");
+        console.log("  - Line 1:", line1Words.join(" "));
+        console.log("  - Line 2:", line2Words.join(" "));
+        return [line1Words.join(" "), line2Words.join(" ").trim()];
     }
-    
-    console.log("✅ Line 1 (4 units):", line1Units);
-    console.log("✅ Line 2 (remaining):", line2Units);
-      return [line1Units.join(" "), line2Units.join(" ").trim()];
+
+    let modalHavePpFoundAndSplit = false;
+
+    for (let i = 0; i < words.length; i++) {
+        if (isAux(words[i])) {
+            let modalIdx = i;
+            let haveIdx = -1;
+            let ppIdx = -1;
+
+            if (modalIdx + 2 < words.length &&
+                words[modalIdx + 1].toLowerCase().replace(/'/g, "") === "have" &&
+                isPastParticiple(words[modalIdx + 2])) {
+                haveIdx = modalIdx + 1;
+                ppIdx = modalIdx + 2;
+            }
+            else if (modalIdx + 3 < words.length &&
+                     words[modalIdx + 2].toLowerCase().replace(/'/g, "") === "have" &&
+                     isPastParticiple(words[modalIdx + 3])) {
+                haveIdx = modalIdx + 2;
+                ppIdx = modalIdx + 3;
+            }
+
+            if (ppIdx !== -1) {
+                let endIndexForLine1 = ppIdx + 1;
+                line1Words = words.slice(0, endIndexForLine1);
+                line2Words = words.slice(endIndexForLine1);
+                modalHavePpFoundAndSplit = true;
+                break;
+            }
+        }
+    }
+
+    if (!modalHavePpFoundAndSplit) {
+        const isEffectiveQuestionType = (isCurrentlyQuestion !== null) ? isCurrentlyQuestion : originalSentenceForShortCheck.endsWith('?');
+        let wordsConsumed = 0;
+        let wordsConsumedForLine1 = 0;
+
+        if (isEffectiveQuestionType) {
+            if (words.length > 0) {
+                if (isWh(words[0])) {
+                    line1Words.push(words[0]); wordsConsumed = 1;
+                    if (wordsConsumed < words.length && isAux(words[wordsConsumed])) {
+                        line1Words.push(words[wordsConsumed++]);
+                        if (wordsConsumed < words.length) {
+                            line1Words.push(words[wordsConsumed++]);
+                            if (wordsConsumed < words.length && isVerb(words[wordsConsumed]) && !isAux(words[wordsConsumed])) {
+                                line1Words.push(words[wordsConsumed++]);
+                            }
+                        }
+                    } else if (wordsConsumed < words.length && (isVerb(words[wordsConsumed]) && !isAux(words[wordsConsumed]))) {
+                        line1Words.push(words[wordsConsumed++]);
+                    } else if (wordsConsumed < words.length) {
+                        line1Words.push(words[wordsConsumed++]);
+                        if (wordsConsumed < words.length && (isAux(words[wordsConsumed]) || (isVerb(words[wordsConsumed]) && !isAux(words[wordsConsumed])) ) ) {
+                            if (line1Words.length < 4) { line1Words.push(words[wordsConsumed++]); }
+                        }
+                    }
+                } else if (isAux(words[0])) {
+                    line1Words.push(words[0]); wordsConsumed = 1;
+                    if (wordsConsumed < words.length) {
+                        line1Words.push(words[wordsConsumed++]);
+                        if (wordsConsumed < words.length && isVerb(words[wordsConsumed]) && !isAux(words[wordsConsumed])) {
+                            line1Words.push(words[wordsConsumed++]);
+                        }
+                    }
+                }
+            }
+            if (line1Words.length === 0 && words.length > 0) {
+                let splitIdx = (words.length <= 3) ? words.length : Math.min(2, words.length);
+                if (words.length === 4) splitIdx = 2;
+                else if (words.length === 5) splitIdx = 3;
+                line1Words = words.slice(0, splitIdx);
+                wordsConsumed = line1Words.length;
+            }
+            line2Words = words.slice(wordsConsumed);
+        } else { // Statement
+            let subjectEndIdx = -1;
+            for (let k = 0; k < words.length; k++) {
+                if (isAux(words[k]) || (isVerb(words[k]) && !isAux(words[k])) || isVing(words[k]) || isBeen(words[k])) {
+                    subjectEndIdx = k; break;
+                }
+            }
+            if (subjectEndIdx > 0) { // Subject found, and it's not the first word
+                for (let k = 0; k < subjectEndIdx; k++) line1Words.push(words[k]);
+                wordsConsumedForLine1 = subjectEndIdx;
+
+                // Add auxiliary if present
+                if (wordsConsumedForLine1 < words.length && isAux(words[wordsConsumedForLine1])) {
+                    line1Words.push(words[wordsConsumedForLine1++]);
+                }
+                // Add main verb (or -ing form, or 'been') if present
+                let verbAddedToLine1 = false;
+                if (wordsConsumedForLine1 < words.length && (isVerb(words[wordsConsumedForLine1]) || isVing(words[wordsConsumedForLine1]) || isBeen(words[wordsConsumedForLine1]))) {
+                    let addVerb = true;
+                    // Avoid duplicating aux if it's also identified as a verb (e.g. "can")
+                    if (line1Words.length > subjectEndIdx && line1Words.length > 0) {
+                        const lastWordInL1 = line1Words[line1Words.length - 1].toLowerCase().replace(/[^a-z0-9']/g, '');
+                        const currentVerbCandidate = words[wordsConsumedForLine1].toLowerCase().replace(/[^a-z0-9']/g, '');
+                        if (lastWordInL1 === currentVerbCandidate && isAux(words[wordsConsumedForLine1])) addVerb = false;
+                    }
+                    if (addVerb) { line1Words.push(words[wordsConsumedForLine1]); verbAddedToLine1 = true; }
+                    wordsConsumedForLine1++;
+                }
+                // If a verb was added and there's more, add one more word (likely an object or particle)
+                if (verbAddedToLine1 && wordsConsumedForLine1 < words.length && line1Words.length < 4) { // Limit line 1 length
+                    line1Words.push(words[wordsConsumedForLine1++]);
+                }
+                line2Words = words.slice(wordsConsumedForLine1);
+
+            } else if (subjectEndIdx === 0 && words.length > 0) { // First word is a verb/aux
+                line1Words.push(words[0]); wordsConsumedForLine1 = 1;
+                let verbAddedToLine1 = (isVerb(words[0]) && !isAux(words[0])) || isVing(words[0]) || isBeen(words[0]);
+
+                // If first word was Aux, and next is Verb/Ving/Been (not Aux), add it
+                if (wordsConsumedForLine1 < words.length && isAux(words[0]) &&
+                    (isVerb(words[wordsConsumedForLine1]) || isVing(words[wordsConsumedForLine1]) || isBeen(words[wordsConsumedForLine1])) &&
+                    !isAux(words[wordsConsumedForLine1])) {
+                    line1Words.push(words[wordsConsumedForLine1++]); verbAddedToLine1 = true;
+                }
+                // If a verb was part of line 1, and there's more, add one more word if line is short
+                if (verbAddedToLine1 && wordsConsumedForLine1 < words.length && line1Words.length < 3) {
+                    line1Words.push(words[wordsConsumedForLine1++]);
+                }
+                line2Words = words.slice(wordsConsumedForLine1);
+            } else { // No clear subject-verb split early, or very short sentence
+                const half = Math.max(1, Math.ceil(words.length / 2));
+                line1Words = words.slice(0, half);
+                line2Words = words.slice(half);
+            }
+        }
+    }
+    // If sentence is very short (<=4 words and <35 chars), put all on line 1,
+    // unless it was a modal+have+pp split where line 2 was intentionally empty.
+    if (words.length <= 4 && originalSentenceForShortCheck.length < 35) {
+        if (!(modalHavePpFoundAndSplit && line2Words.length === 0)) {
+            line1Words = words.slice(); // All words to line1
+            line2Words = [];          // Line2 becomes empty
+        }
+    }
+    // Ensure line1 is not empty if original sentence had words
+    if (line1Words.length === 0 && words.length > 0) {
+        line1Words = [words[0]];
+        line2Words = words.slice(1);
+    }
+
+    return [line1Words.join(" "), line2Words.join(" ").trim()];
 }
 // =======================================================================
 // END OF MODIFIED splitSentence FUNCTION
@@ -945,29 +1397,16 @@ const WORD_ANIM_MAX_HEIGHT = 18;
 
 // --- START: 의문사 복제본 관련 변수들 ---
 let questionWordClones = []; // 생성된 의문사 복제본들을 저장
-const CLONE_OFFSET_Y = 40; // 의문사 복제본이 원본에서 위로 얼마나 떨어져 있을지 (50에서 40으로 변경하여 10px 아래로)
+const CLONE_OFFSET_Y = 40; // 의문사 복제본이 원본에서 위로 얼마나 떨어져 있을지 (10px 내림)
 let cloneCreatedForCurrentQuestion = false; // 현재 질문에서 복제본이 이미 생성되었는지 추적
 // --- END: 의문사 복제본 관련 변수들 ---
 
 // --- START: 주어+조동사 복제본 관련 변수들 ---
 let subjectAuxClones = []; // 생성된 주어+조동사 복제본들을 저장
-const SUBJECT_AUX_CLONE_OFFSET_Y = 60; // 주어+조동사 복제본이 원본에서 위로 얼마나 떨어져 있을지 (의문사 복제본보다 10px 더 위)
+const SUBJECT_AUX_CLONE_OFFSET_Y = 50; // 주어+조동사 복제본이 원본에서 위로 얼마나 떨어져 있을지 (의문사 복제본보다 10px 더 위)
 const SUBJECT_AUX_CLONE_OFFSET_X = 15; // 주어+조동사 복제본이 의문사 복제본에서 오른쪽으로 15px 떨어져 있을지
 let cloneCreatedForCurrentAnswer = false; // 현재 답변에서 복제본이 이미 생성되었는지 추적
-const WORD_SWAP_ANIMATION_DURATION = 2000; // 단어 순서 바뀜 애니메이션 지속시간 (2초)
 // --- END: 주어+조동사 복제본 관련 변수들 ---
-
-// --- START: 화살표 애니메이션 관련 변수들 ---
-let arrowAnimationActive = false; // 화살표 애니메이션이 활성 상태인지
-let arrowAnimationProgress = 0; // 화살표 애니메이션 진행도 (0~1)
-let arrowAnimationStartTime = 0; // 화살표 애니메이션 시작 시간
-const ARROW_ANIMATION_DURATION = 1050; // 화살표 애니메이션 지속 시간 (ms) - 30% 더 빠르게
-const ARROW_ANIMATION_DELAY = 1400; // 다음 애니메이션까지의 지연 시간 (ms) - 30% 더 빠르게
-let arrowStartX = 0; // 화살표 시작점 X 좌표 (물음표 오른쪽 끝)
-let arrowStartY = 0; // 화살표 시작점 Y 좌표
-let arrowEndX = 0; // 화살표 끝점 X 좌표 (첫 글자 왼쪽 위)
-let arrowEndY = 0; // 화살표 끝점 Y 좌표
-// --- END: 화살표 애니메이션 관련 변수들 ---
 
 // --- START: 동사 복제본 관련 변수들 ---
 let verbClones = []; // 생성된 동사 복제본들을 저장
@@ -988,9 +1427,9 @@ function startWordWaveAnimation(wordRect, drawingContext, enableCloneGeneration 
 
   // 의문사인지 확인
   const isQuestionWordToClone = isWh(wordRect.word.toLowerCase().replace(/[^a-z0-9']/g, ""));
-    // 조동사인지 확인 (조동사 부정어도 조동사로 포함)
-  const cleanWord = wordRect.word.toLowerCase().replace(/[^a-z0-9']/g, "");
-  const isAuxiliaryWord = isAux(cleanWord) || isAuxiliaryContraction(cleanWord);
+  
+  // 조동사인지 확인
+  const isAuxiliaryWord = isAux(wordRect.word.toLowerCase().replace(/[^a-z0-9']/g, ""));
 
   // 의문사인 경우, 복제본 생성이 허용되고 현재 질문에서 복제본이 아직 생성되지 않은 경우에만 기존 복제본들을 제거
   if (isQuestionWordToClone && enableCloneGeneration && !cloneCreatedForCurrentQuestion) {
@@ -1106,6 +1545,17 @@ function updateWordAnimations(currentTime) { // Plural, as it updates all active
 function createQuestionWordClone(animation) {
   if (!animation || !animation.targetWordRect || !animation.charPositions) return;
   
+  // 패턴2가 감지된 경우 복제본 생성 무시
+  if (window.lastDetectedPattern === "pattern2") {
+    console.log("⛔ 패턴2 감지됨: 의문사 복제본 생성 취소");
+    return;
+  }
+  
+  if (!animation.enableCloneGeneration) {
+    console.log("⛔ enableCloneGeneration이 false: 의문사 복제본 생성 취소");
+    return;
+  }
+  
   // 현재 애니메이션의 고점 위치 계산 (의문사가 현재 도달한 위치)
   const currentAnimationHighPoint = animation.targetWordRect.y - animation.maxHeight;
   
@@ -1127,6 +1577,7 @@ function createQuestionWordClone(animation) {
     alpha: 1.0
   };
   
+  console.log("✅ 의문사 복제본 생성됨:", clone.word);
   questionWordClones.push(clone);
 }
 
@@ -1168,16 +1619,25 @@ function clearQuestionWordClones() {
   // 의문사 복제본이 사라질 때 주어+조동사 복제본과 동사 복제본도 동시에 제거
   clearSubjectAuxClones();
   clearVerbClones();
-  // 화살표 애니메이션도 중지
-  stopArrowAnimation();
   console.log("🧹 Question word clones cleared");
 }
 
 // --- START: 주어+조동사 복제본 관련 함수들 ---
 
-// 주어+조동사 복제본 생성 함수 (원래 순서 유지: 조동사 + 주어)
+// 주어+조동사 복제본 생성 함수 (원래 순서 유지)
 function createSubjectAuxClone(subjectAnimation, auxAnimation) {
   if (!subjectAnimation || !auxAnimation || !subjectAnimation.targetWordRect || !auxAnimation.targetWordRect) return;
+  
+  // 패턴2가 감지된 경우 복제본 생성 무시
+  if (window.lastDetectedPattern === "pattern2") {
+    console.log("⛔ 패턴2 감지됨: 주어+조동사 복제본 생성 취소");
+    return;
+  }
+  
+  if (!auxAnimation.enableCloneGeneration) {
+    console.log("⛔ enableCloneGeneration이 false: 주어+조동사 복제본 생성 취소");
+    return;
+  }
   
   // 현재 조동사 애니메이션의 고점 위치 계산
   const currentAnimationHighPoint = auxAnimation.targetWordRect.y - auxAnimation.maxHeight;
@@ -1195,9 +1655,9 @@ function createSubjectAuxClone(subjectAnimation, auxAnimation) {
       const lastChar = questionClone.charPositions[questionClone.charPositions.length - 1];
       targetX = lastChar.x + lastChar.width + SUBJECT_AUX_CLONE_OFFSET_X;
     }
-  }    const clone = {
-    auxWord: auxAnimation.wordText,      // 조동사를 첫 번째로
-    subjectWord: subjectAnimation.wordText,  // 주어를 두 번째로
+  }  const clone = {
+    subjectWord: subjectAnimation.wordText,
+    auxWord: auxAnimation.wordText,
     combinedText: combinedText,
     originalX: targetX, // 의문사 복제본 끝에서 10px 떨어진 위치
     originalY: currentAnimationHighPoint,
@@ -1207,70 +1667,50 @@ function createSubjectAuxClone(subjectAnimation, auxAnimation) {
     createdTime: performance.now(),
     animationPhase: 'moving_up',
     alpha: 1.0,
-    // 순서 바뀜 애니메이션 관련 속성들
-    swapAnimationStartTime: null, // 순서 바뀜 애니메이션 시작 시간
-    isSwapAnimationActive: false, // 순서 바뀜 애니메이션 활성화 여부
-    auxCharPositions: [], // 조동사 문자들의 개별 위치
-    subjectCharPositions: [] // 주어 문자들의 개별 위치
+    waitStartTime: 0, // 대기 시작 시간
+    swapStartTime: 0, // 위치 교환 시작 시간
+    isSwapping: false, // 위치 교환 중인지 여부
+    auxLength: auxAnimation.wordText.length, // 조동사 길이
+    spaceIndex: auxAnimation.wordText.length, // 공백 위치 인덱스
+    subjectWidth: 0, // 주어 너비 (계산될 예정)
+    auxWidth: 0    // 조동사 너비 (계산될 예정)
   };
     // 결합된 텍스트의 문자 위치 계산
   ctx.font = englishFont;
   const letters = combinedText.split('');
   let currentX = clone.originalX;
   
-  // 조동사 문자들의 위치 계산
-  const auxLetters = clone.auxWord.split('');
-  auxLetters.forEach((char) => {
+  // 조동사와 주어의 너비를 계산하기 위한 변수
+  let auxWidthSum = 0;
+  let subjectWidthSum = 0;
+  let isInAux = true; // 조동사 부분인지 여부
+  let isSpace = false; // 공백인지 여부
+  
+  letters.forEach((char, index) => {
     const charWidth = ctx.measureText(char).width;
-    const charPos = {
+    
+    // 조동사/주어 너비 누적
+    if (index < clone.auxLength) {
+      auxWidthSum += charWidth;
+    } else if (index > clone.auxLength) { // 공백 다음이면 주어
+      subjectWidthSum += charWidth;
+    }
+    
+    clone.charPositions.push({
       char: char,
       x: currentX,
       originalY: currentAnimationHighPoint,
       currentY: currentAnimationHighPoint,
-      width: charWidth,
-      originalX: currentX // 원본 X 위치 저장
-    };
-    clone.charPositions.push(charPos);
-    clone.auxCharPositions.push(charPos);
+      width: charWidth
+    });
     currentX += charWidth;
   });
   
-  // 공백 문자 추가
-  const spaceWidth = ctx.measureText(' ').width;
-  const spacePos = {
-    char: ' ',
-    x: currentX,
-    originalY: currentAnimationHighPoint,
-    currentY: currentAnimationHighPoint,
-    width: spaceWidth,
-    originalX: currentX
-  };
-  clone.charPositions.push(spacePos);
-  currentX += spaceWidth;
-  
-  // 주어 문자들의 위치 계산
-  const subjectLetters = clone.subjectWord.split('');
-  subjectLetters.forEach((char) => {
-    const charWidth = ctx.measureText(char).width;
-    const charPos = {
-      char: char,
-      x: currentX,
-      originalY: currentAnimationHighPoint,
-      currentY: currentAnimationHighPoint,
-      width: charWidth,
-      originalX: currentX // 원본 X 위치 저장
-    };
-    clone.charPositions.push(charPos);
-    clone.subjectCharPositions.push(charPos);
-    currentX += charWidth;
-  });
+  // 계산된 너비 저장
+  clone.auxWidth = auxWidthSum;
+  clone.subjectWidth = subjectWidthSum;
   
   subjectAuxClones.push(clone);
-  
-  // 주어+조동사 복제본이 생성되면 화살표 애니메이션 시작
-  setTimeout(() => {
-    startArrowAnimation();
-  }, 400); // 복제본 이동 애니메이션이 완료된 후 화살표 시작 (300ms + 100ms 여유)
 }
 
 // 주어+조동사 복제본 업데이트 함수
@@ -1285,105 +1725,123 @@ function updateSubjectAuxClones(currentTime) {
         const t = elapsedTime / moveUpDuration;
         const easedT = 1 - Math.pow(1 - t, 3); // ease-out cubic
         clone.currentY = clone.originalY + (clone.targetY - clone.originalY) * easedT;
-          // 각 문자의 위치도 업데이트
+        
+        // 각 문자의 위치도 업데이트
         clone.charPositions.forEach(cp => {
           cp.currentY = cp.originalY + (clone.targetY - clone.originalY) * easedT;
         });
       } else {
-        // 이동 완료, 정지 상태로 전환
-        clone.animationPhase = 'stationary';
+        // 이동 완료, 잠시 대기 상태로 전환
+        clone.animationPhase = 'waiting';
+        clone.waitStartTime = currentTime;
         clone.currentY = clone.targetY;
+        
+        // 각 문자별 원래 위치 저장
         clone.charPositions.forEach(cp => {
           cp.currentY = clone.targetY;
+          cp.originalX = cp.x;
+          cp.originalY = cp.currentY;
         });
-        
-        // 정착 후 1초 뒤 순서 바뀜 애니메이션 시작
-        if (!clone.swapAnimationStartTime) {
-          setTimeout(() => {
-            clone.swapAnimationStartTime = performance.now();
-            clone.isSwapAnimationActive = true;
-          }, 1000); // 1초 후 순서 바뀜 애니메이션 시작
-        }
       }
-    } else if (clone.animationPhase === 'stationary' && clone.isSwapAnimationActive) {
-      // 순서 바뀜 애니메이션 처리
-      const swapElapsedTime = currentTime - clone.swapAnimationStartTime;
-        if (swapElapsedTime < WORD_SWAP_ANIMATION_DURATION) {
-        const t = swapElapsedTime / WORD_SWAP_ANIMATION_DURATION;
-        const easedT = 1 - Math.pow(1 - t, 3); // ease-out cubic - 부드럽고 일관된 이동
+    } else if (clone.animationPhase === 'waiting') {
+      // 2초 대기 후 위치 교환 시작
+      const waitDuration = 2000; // 2초(2000ms) 대기
+      const waitElapsedTime = currentTime - clone.waitStartTime;
+      
+      if (waitElapsedTime >= waitDuration) {
+        // 대기 완료, 위치 교환 애니메이션 시작
+        clone.animationPhase = 'swapping';
+        clone.swapStartTime = currentTime;
+      }    } else if (clone.animationPhase === 'swapping') {
+      const swapDuration = 2000; // 2초(2000ms) 동안 위치 교환
+      const swapElapsedTime = currentTime - clone.swapStartTime;
+        if (swapElapsedTime < swapDuration) {
+        const t = swapElapsedTime / swapDuration;
+        const easedT = t; // 선형 애니메이션으로 시작
         
-        // 주어의 최종 위치 계산 (맨 앞으로)
-        const subjectFinalX = clone.originalX;
+        // 조동사와 주어 부분 나누기
+        // 조동사 부분(0 ~ auxLength)
+        const auxChars = clone.charPositions.slice(0, clone.auxLength);
+        // 공백(auxLength)
+        const spaceChar = clone.charPositions[clone.auxLength];
+        // 주어 부분(auxLength+1 ~ end)
+        const subjectChars = clone.charPositions.slice(clone.auxLength + 1);
         
-        // 조동사의 최종 위치 계산 (주어 뒤로)
-        ctx.font = englishFont;
-        const subjectWidth = ctx.measureText(clone.subjectWord).width;
-        const spaceWidth = ctx.measureText(' ').width;
-        const auxFinalX = subjectFinalX + subjectWidth + spaceWidth;        // 주어 문자들을 반원 경로로 이동 (위쪽으로 호를 그리며 앞으로)
-        const subjectStartX = clone.subjectCharPositions[0].originalX;
-        const subjectTargetX = subjectFinalX;
+        // 원래 위치 계산
+        const auxStartX = clone.charPositions[0].originalX;
+        const subjectStartX = clone.charPositions[clone.auxLength + 1].originalX;
+        const auxWidth = auxChars.reduce((sum, c) => sum + c.width, 0);
+        const subjectWidth = subjectChars.reduce((sum, c) => sum + c.width, 0);
         
-        // 직선 이동과 아크 높이를 분리하여 계산
-        const linearX = subjectStartX + (subjectTargetX - subjectStartX) * easedT;
-        const arcProgress = Math.sin(Math.PI * easedT); // 0에서 1로 올라갔다가 다시 0으로
-        const arcY = clone.targetY - 30 * arcProgress; // 최대 30px 위로
+        // 주어 전체 블록 이동 거리 계산
+        const subjectDistanceToMove = auxStartX - subjectStartX;
         
-        // 모든 주어 문자들을 블록으로 이동
-        let offsetX = 0;
-        clone.subjectCharPositions.forEach((charPos) => {
-          charPos.x = linearX + offsetX;
-          charPos.currentY = arcY;
-          offsetX += charPos.width;
-        });
-          // 조동사 문자들을 직선으로 뒤쪽으로 이동
-        clone.auxCharPositions.forEach((charPos, index) => {
-          // 각 조동사 문자의 최종 목표 위치 계산
-          let targetCharX = auxFinalX;
-          for (let i = 0; i < index; i++) {
-            targetCharX += clone.auxCharPositions[i].width;
-          }
-          charPos.x = charPos.originalX + (targetCharX - charPos.originalX) * easedT;
-        });
+        // 조동사 전체 블록 이동 거리 계산
+        const auxDistanceToMove = (subjectStartX - auxStartX) + (subjectWidth - auxWidth + spaceChar.width);
         
-      } else {
-        // 순서 바뀜 애니메이션 완료
-        clone.isSwapAnimationActive = false;
+        // 반원 계산을 위한 변수
+        const arcRadius = 40; // 반원의 반지름
+        const baseY = clone.targetY; // 기본 Y 위치
         
-        // 최종 위치로 고정
-        const subjectFinalX = clone.originalX;
-        ctx.font = englishFont;
-        const subjectWidth = ctx.measureText(clone.subjectWord).width;
-        const spaceWidth = ctx.measureText(' ').width;
-        const auxFinalX = subjectFinalX + subjectWidth + spaceWidth;
-          // 주어를 앞으로
-        let currentSubjectX = subjectFinalX;
-        clone.subjectCharPositions.forEach((charPos) => {
-          charPos.x = currentSubjectX;
-          charPos.currentY = clone.targetY;
-          currentSubjectX += charPos.width;
+        // 주어 문자들 이동 (그룹으로 이동하면서 반원을 그리며)
+        subjectChars.forEach((cp, idx) => {
+          const relativePosition = cp.originalX - subjectStartX; // 주어 시작점으로부터 상대적 위치
+          cp.x = subjectStartX + relativePosition + (subjectDistanceToMove * easedT);
+          
+          // 반원 형태로 이동 (sin 함수 사용)
+          // t가 0→1로 증가하므로 sin(t*π)는 0→1→0의 형태
+          // 이를 활용하여 Y축으로 위로 올라갔다가 내려오는 반원 형태 구현
+          const yOffset = Math.sin(easedT * Math.PI) * arcRadius;
+          cp.currentY = baseY - yOffset; // 위로 올라갔다가 내려옴
         });
         
-        // 조동사를 뒤로
-        let currentAuxX = auxFinalX;
-        clone.auxCharPositions.forEach((charPos) => {
-          charPos.x = currentAuxX;
-          charPos.currentY = clone.targetY;
-          currentAuxX += charPos.width;
+        // 공백 위치 조정 (주어 뒤에 붙어서 이동하며 같은 반원 형태)
+        const lastSubjectChar = subjectChars[subjectChars.length - 1];
+        spaceChar.x = lastSubjectChar ? lastSubjectChar.x + lastSubjectChar.width : subjectStartX + (subjectDistanceToMove * easedT);
+        const spaceYOffset = Math.sin(easedT * Math.PI) * arcRadius;
+        spaceChar.currentY = baseY - spaceYOffset;
+        
+        // 조동사 문자들 이동 (그룹으로 수평 이동)
+        auxChars.forEach((cp, idx) => {
+          const relativePosition = cp.originalX - auxStartX; // 조동사 시작점으로부터 상대적 위치
+          cp.x = auxStartX + relativePosition + (auxDistanceToMove * easedT);
+          // Y 위치 유지 (수평 이동)
+          cp.currentY = baseY;
+        });} else {
+        // 교환 완료, 정지 상태로 전환
+        clone.animationPhase = 'stationary';
+        
+        // 최종 위치 설정 (완전히 교환된 상태)
+        // 조동사 부분
+        const auxChars = clone.charPositions.slice(0, clone.auxLength);
+        // 공백
+        const spaceChar = clone.charPositions[clone.auxLength];
+        // 주어 부분
+        const subjectChars = clone.charPositions.slice(clone.auxLength + 1);
+        
+        // 원래 위치 계산
+        const auxStartX = clone.charPositions[0].originalX;
+        const subjectStartX = clone.charPositions[clone.auxLength + 1].originalX;
+        
+        // 주어와 조동사의 최종 위치 계산        // 주어를 조동사 위치로 이동하되 상대적 간격 유지
+        const subjectDistanceToMove = auxStartX - subjectStartX;
+        subjectChars.forEach(cp => {
+          const relativePosition = cp.originalX - subjectStartX; // 주어 시작점으로부터 상대적 위치
+          cp.x = auxStartX + relativePosition;
+          cp.currentY = clone.targetY; // Y 위치 복원 (반원 이동 후 원래 높이로)
         });
         
-        // charPositions 배열 재정렬 (주어 + 공백 + 조동사 순서로)
-        clone.charPositions = [
-          ...clone.subjectCharPositions,
-          clone.charPositions.find(cp => cp.char === ' '), // 공백 찾기
-          ...clone.auxCharPositions
-        ];
+        // 공백 위치 조정 (주어 뒤에 붙임)
+        const lastSubjectChar = subjectChars[subjectChars.length - 1];
+        spaceChar.x = lastSubjectChar ? lastSubjectChar.x + lastSubjectChar.width : auxStartX;
+        spaceChar.currentY = clone.targetY; // Y 위치 복원
         
-        // 공백 위치 조정
-        const spaceChar = clone.charPositions.find(cp => cp.char === ' ');
-        if (spaceChar) {
-          spaceChar.x = subjectFinalX + subjectWidth;
-          spaceChar.currentY = clone.targetY;
-        }
+        // 조동사를 주어 위치로 이동하되 상대적 간격 유지
+        const auxDistanceToMove = (subjectStartX - auxStartX);
+        auxChars.forEach(cp => {
+          const relativePosition = cp.originalX - auxStartX; // 조동사 시작점으로부터 상대적 위치
+          cp.x = spaceChar.x + spaceChar.width + relativePosition;
+        });
       }
     }
   }
@@ -1399,6 +1857,12 @@ function clearSubjectAuxClones() {
 // 동사 복제본 생성 함수 (부드러운 애니메이션으로 원본 위치에서 목표 위치로 이동)
 function createVerbClone(verbWordRect) {
   if (!verbWordRect) return;
+  
+  // 패턴2가 감지된 경우 동사 복제본 생성 무시
+  if (window.lastDetectedPattern === "pattern2") {
+    console.log("⛔ 패턴2 감지됨: 동사 복제본 생성 취소");
+    return;
+  }
   
   // adjustedSpaceWidth를 동적으로 계산 (다른 단어들 간의 간격과 동일하게)
   ctx.font = englishFont;
@@ -1602,27 +2066,22 @@ function triggerBounceAnimationForWords(sentenceObject, isQuestion) {
       const isWhWord = isWh(cleanWord);
       console.log(`🔍 Checking word "${wordRect.word}" (clean: "${cleanWord}") - isWh: ${isWhWord}`);
       return isWhWord;
-    });  } else {
-    if (isCurrentlyQuestion) {      // 질문 문장에서 조동사+주어만: 첫 번째 줄에서 조동사이거나 주어인 단어들만
-      // 실제 첫 번째 줄 단어들을 가져오기 (x 좌표 순으로 정렬)
-      const sortedFirstLineWords = [...firstLineWords].sort((a, b) => a.x - b.x);
-      const actualFirstLineWords = sortedFirstLineWords.map(r => r.word);
-      
-      relevantWordRects = sortedFirstLineWords.filter(wordRect => {
-        const cleanWord = wordRect.word.toLowerCase().replace(/[^a-z0-9']/g, '');
-        const isAuxWord = isAux(cleanWord) || isAuxiliaryContraction(cleanWord);
-        
-        // 정렬된 배열에서의 실제 위치
-        const actualWordIndex = sortedFirstLineWords.indexOf(wordRect);
-        const isSubjectWord = hasAuxiliaryBefore(actualFirstLineWords, actualWordIndex) && !isVerb(cleanWord);
-        
-        console.log(`🔍 Checking word "${wordRect.word}" (clean: "${cleanWord}") - isAux: ${isAuxWord}, isSubject: ${isSubjectWord}, actualIndex: ${actualWordIndex}`);
-        return isAuxWord || isSubjectWord;
-      });
-    } else if (isCurrentlyAnswer) {      // 답변 문장에서 조동사만: 첫 번째 줄에서 조동사인 단어들만
+    });
+  } else {
+    if (isCurrentlyQuestion) {
+      // 질문 문장에서 조동사+주어만: 첫 번째 줄에서 조동사이거나 주어인 단어들만
       relevantWordRects = firstLineWords.filter(wordRect => {
         const cleanWord = wordRect.word.toLowerCase().replace(/[^a-z0-9']/g, '');
-        const isAuxWord = isAux(cleanWord) || isAuxiliaryContraction(cleanWord);
+        const isAuxWord = isAux(cleanWord);
+        const isSubject = !isWh(cleanWord) && !isAux(cleanWord) && !isVerb(cleanWord);
+        console.log(`🔍 Checking word "${wordRect.word}" (clean: "${cleanWord}") - isAux: ${isAuxWord}, isSubject: ${isSubject}`);
+        return isAuxWord || isSubject;
+      });
+    } else if (isCurrentlyAnswer) {
+      // 답변 문장에서 조동사만: 첫 번째 줄에서 조동사인 단어들만
+      relevantWordRects = firstLineWords.filter(wordRect => {
+        const cleanWord = wordRect.word.toLowerCase().replace(/[^a-z0-9']/g, '');
+        const isAuxWord = isAux(cleanWord);
         console.log(`🔍 Checking answer word "${wordRect.word}" (clean: "${cleanWord}") - isAux: ${isAuxWord}`);
         return isAuxWord;
       });
@@ -1699,164 +2158,78 @@ function clearBounceAnimations() {
   activeBounceAnimations = [];
 }
 
-// --- START: 화살표 애니메이션 관련 함수들 ---
-
-// 화살표 애니메이션 시작 함수
-function startArrowAnimation() {
-  if (!questionWordClones.length || !subjectAuxClones.length) {
-    console.log("❌ Cannot start arrow animation: missing clones");
-    return;
-  }  // 물음표("?") 문자의 정확한 위치 찾기
-  const questionClone = questionWordClones[0];
-  if (questionClone.charPositions && questionClone.charPositions.length > 0) {
-    // 디버깅: 모든 문자 출력
-    console.log("🔍 All characters in question clone:", questionClone.charPositions.map(cp => cp.char));
-    
-    // 물음표 문자를 찾기
-    let questionMarkChar = null;
-    for (let i = 0; i < questionClone.charPositions.length; i++) {
-      const char = questionClone.charPositions[i];
-      if (char.char === '?') {
-        questionMarkChar = char;
-        console.log("✅ Found question mark at position:", i, "coordinates:", char.x, char.y);
-        break;
-      }
-    }
-    
-    // 물음표를 찾지 못한 경우 마지막 문자 사용 (fallback)
-    if (!questionMarkChar) {
-      questionMarkChar = questionClone.charPositions[questionClone.charPositions.length - 1];
-      console.log("⚠️ Question mark not found, using last character:", questionMarkChar.char);
-    }    // 물음표의 중간 지점에서 시작 (25px 위로 이동 - 10px 아래로 - 5px 더 아래로 = 10px 위로, x축 우측으로 17px 이동)
-    arrowStartX = questionMarkChar.x + (questionMarkChar.width / 2) + 17; // 물음표 중간 지점 + 17px 우측 (3px 왼쪽으로 이동)
-    arrowStartY = questionClone.currentY - 25 + 10 + 5; // 25px 위로 이동 후 10px 아래로 + 5px 더 아래로 = 10px 위로
-    console.log("🏹 Arrow start position set to:", arrowStartX, arrowStartY);
-  }  // 주어+조동사 복제본의 첫 번째 글자 좌측 아래쪽 모서리 위치 계산 (우하향, 25px 위로 이동)
-  const subjectAuxClone = subjectAuxClones[0];
-  if (subjectAuxClone.charPositions && subjectAuxClone.charPositions.length > 0) {
-    const firstChar = subjectAuxClone.charPositions[0];    // 원래 끝점 계산 (10px 아래로 이동 + 5px 더 아래로, x축 우측으로 20px 이동)
-    const originalEndX = firstChar.x + 10 + 20; // 첫 글자 좌측 모서리에서 우측으로 10px 이동 + 20px 추가 이동
-    const originalEndY = firstChar.currentY + 15 - 25 + 10 + 5; // 첫 글자 아래쪽 모서리로 15px 아래 - 25px 위 + 10px 아래 + 5px 더 아래 = 5px 아래
-    
-    // 화살표 길이를 더 줄이기 위해 끝점을 시작점 쪽으로 94.38% 이동 (7.03%에서 20% 더 줄임)
-    arrowEndX = arrowStartX + (originalEndX - arrowStartX) * 0.0562; // 5.62% 거리로 줄임 (7.03%에서 20% 더 줄임)
-    arrowEndY = arrowStartY + (originalEndY - arrowStartY) * 0.0562; // 5.62% 거리로 줄임
-  }
-  
-  arrowAnimationActive = true;
-  arrowAnimationStartTime = performance.now();
-  arrowAnimationProgress = 0;
-  
-  console.log(`🏹 Arrow animation started: (${arrowStartX}, ${arrowStartY}) → (${arrowEndX}, ${arrowEndY})`);
-}
-
-// 화살표 애니메이션 업데이트 함수
-function updateArrowAnimation(currentTime) {
-  if (!arrowAnimationActive) return;
-  
-  const elapsedTime = currentTime - arrowAnimationStartTime;
-  const totalCycleTime = ARROW_ANIMATION_DURATION + ARROW_ANIMATION_DELAY;
-  const cycleProgress = (elapsedTime % totalCycleTime) / totalCycleTime;
-  
-  if (cycleProgress < (ARROW_ANIMATION_DURATION / totalCycleTime)) {
-    // 애니메이션 진행 중
-    const animProgress = (elapsedTime % totalCycleTime) / ARROW_ANIMATION_DURATION;
-    arrowAnimationProgress = Math.min(animProgress, 1.0);
-  } else {
-    // 지연 시간 중 (화살표 숨김)
-    arrowAnimationProgress = 0;
-  }
-}
-
-// 화살표 애니메이션 중지 함수
-function stopArrowAnimation() {
-  arrowAnimationActive = false;
-  arrowAnimationProgress = 0;
-  console.log("🏹 Arrow animation stopped");
-}
-
-// --- END: 화살표 애니메이션 관련 함수들 ---
-
 // --- END: 바운스 애니메이션 관련 함수들 ---
 // --- END: Word Animation Variables and Functions ---
 
-// 의문사 + 조동사 + 주어 + 동사 패턴 감지 함수 (정확한 순서 검증)
-function isQuestionWordAuxSubjectVerbPattern(sentenceText) {
+// 의문사 + 조동사 + 주어 + 동사 패턴 감지 함수
+function shouldCreateCloneForQuestionPattern(sentenceText) {
   const words = sentenceText.trim().split(" ").filter(w => w.length > 0);
   console.log("🔍 Pattern detection for:", sentenceText);
   console.log("🔍 Words:", words);
   
-  if (words.length < 4) {
-    console.log("❌ Too few words for pattern (need at least 4)");
+  if (words.length < 3) {
+    console.log("❌ Too few words for any pattern (need at least 3)");
     return false;
   }
   
-  // 1️⃣ 첫 번째 단어: 의문사여야 함
+  // 첫 번째 단어가 의문사인지 확인
   const firstWord = words[0].toLowerCase().replace(/[^a-z0-9']/g, "");
   if (!isWh(firstWord)) {
-    console.log("❌ Position 1: Not a question word:", firstWord);
+    console.log("❌ First word is not a question word:", firstWord);
     return false;
   }
-  console.log("✅ Position 1: Question word found:", firstWord);
   
-  // 2️⃣ 두 번째 단어: 조동사 또는 조동사 부정어여야 함
+  // 두 번째 단어가 조동사인지 확인
   const secondWord = words[1].toLowerCase().replace(/[^a-z0-9']/g, "");
-  if (!isAux(secondWord) && !isAuxiliaryContraction(secondWord)) {
-    console.log("❌ Position 2: Not auxiliary or auxiliary contraction:", secondWord);
+  if (!isAux(secondWord)) {
+    console.log("❌ Second word is not auxiliary:", secondWord);
     return false;
   }
-  console.log("✅ Position 2: Auxiliary found:", secondWord);
   
-  // 3️⃣ 세 번째 단어: 주어여야 함 (의문사도 조동사도 동사도 아니어야 함)
+  // 패턴 2 확인: "의문사 + 조동사 + 동사" (우선 확인)
+  // 이 패턴에서는 복제본을 생성하지 않음
   const thirdWord = words[2].toLowerCase().replace(/[^a-z0-9']/g, "");
+  if (isVerb(thirdWord) && !isAux(thirdWord)) {
+    console.log("🚫 Pattern 2 확인됨: '의문사 + 조동사 + 동사' - 복제본 생성 금지");
+    console.log("🚫 문장: ", sentenceText);
+    console.log("🚫 패턴2 감지됨: ", firstWord, secondWord, thirdWord);
+    window.lastDetectedPattern = "pattern2"; // 패턴2 감지 플래그
+    return false;
+  }
   
-  // 특별한 예외 패턴들 체크
+  // 패턴 1 확인: "의문사 + 조동사 + 주어 + 동사"
+  // 세 번째 단어가 주어인지 확인 (의문사도 조동사도 동사도 아닌 경우)
+  if (isWh(thirdWord) || isAux(thirdWord) || isVerb(thirdWord)) {
+    console.log("❌ Third word is not a proper subject:", thirdWord);
+    return false;
+  }
+  
+  // "의문사 + 조동사 + have + PP" 패턴 체크 (복제본 생성 안함)
   if (thirdWord === "have") {
-    console.log("❌ Position 3: 'have' detected - this creates 'question word + aux + have + PP' pattern");
+    console.log("❌ Pattern 'question word + aux + have + PP' detected - no clones should be created");
     return false;
   }
   
-  if (isWh(thirdWord)) {
-    console.log("❌ Position 3: Should be subject, but found question word:", thirdWord);
-    return false;
-  }
-  
-  if (isAux(thirdWord) || isAuxiliaryContraction(thirdWord)) {
-    console.log("❌ Position 3: Should be subject, but found auxiliary:", thirdWord);
-    return false;
-  }
-  
-  if (isVerb(thirdWord)) {
-    console.log("❌ Position 3: Should be subject, but found verb:", thirdWord);
-    return false;
-  }
-  
-  console.log("✅ Position 3: Subject found:", thirdWord);
-  
-  // 4️⃣ 네 번째 단어: 동사여야 함 (정확히 4번째 위치에서만)
+  // 네 번째 단어 이후에 동사가 있는지 확인 (패턴 1의 경우)
   if (words.length < 4) {
-    console.log("❌ Position 4: No word found at position 4");
+    console.log("❌ Not enough words for pattern 1");
     return false;
   }
   
-  const fourthWord = words[3].toLowerCase().replace(/[^a-z0-9']/g, "");
-  
-  // 네 번째 단어가 동사이고 조동사가 아니어야 함
-  if (!isVerb(fourthWord)) {
-    console.log("❌ Position 4: Not a verb:", fourthWord);
-    return false;
+  let hasVerb = false;
+  for (let i = 3; i < words.length; i++) {
+    const word = words[i].toLowerCase().replace(/[^a-z0-9']/g, "");
+    if (isVerb(word) && !isAux(word)) {
+      hasVerb = true;
+      console.log("✅ Found verb at position", i + 1, ":", word);
+      break;
+    }
   }
   
-  if (isAux(fourthWord) || isAuxiliaryContraction(fourthWord)) {
-    console.log("❌ Position 4: Should be main verb, but found auxiliary:", fourthWord);
-    return false;
-  }
-  
-  console.log("✅ Position 4: Main verb found:", fourthWord);
-  
-  // 모든 조건을 만족하는 경우에만 true 반환
-  console.log("🎯 Perfect pattern match: 의문사(" + firstWord + ") + 조동사(" + secondWord + ") + 주어(" + thirdWord + ") + 동사(" + fourthWord + ")");
-  return true;
+  const result = hasVerb;
+  console.log("🎯 패턴 결과:", result ? "패턴1 매치됨 (복제본 생성 가능)" : "패턴 매치 안됨 (복제본 생성 불가)");
+  window.lastDetectedPattern = result ? "pattern1" : "unknown";
+  return result;
 }
 
 // --- START: New/Modified triggerSentenceWordAnimation Function ---
@@ -1897,19 +2270,24 @@ function triggerSentenceWordAnimation(sentenceObject, isQuestion, allWordRects, 
       if (!currentQuestionSentence || currentQuestionSentenceIndex === null) {
         console.log("⚠️ Current question state invalid, skipping animation");
         return;
-      }
-
-      // 질문 문장 전체 텍스트 구성
+      }      // 질문 문장 전체 텍스트 구성
       const fullQuestionText = (sentenceObject.line1 + " " + sentenceObject.line2).trim();
       console.log("🔍 Full question text:", fullQuestionText);
       
       // 패턴 감지를 통해 복제본 생성 허용 여부 결정
-      const shouldAllowClones = isQuestionWordAuxSubjectVerbPattern(fullQuestionText);
-      const finalEnableCloneGeneration = enableCloneGeneration && shouldAllowClones;
+      // 패턴2인 경우 항상 복제본 생성 금지
+      window.lastDetectedPattern = "unknown"; // 기본값 초기화
+      const shouldAllowClones = shouldCreateCloneForQuestionPattern(fullQuestionText);
+      
+      // 패턴2가 감지되었으면 복제본 생성 강제 금지
+      const isPattern2 = window.lastDetectedPattern === "pattern2";
+      const finalEnableCloneGeneration = isPattern2 ? false : (enableCloneGeneration && shouldAllowClones);
       
       console.log("🎭 Clone generation decision:");
       console.log("  - Original enableCloneGeneration:", enableCloneGeneration);
       console.log("  - Pattern allows clones:", shouldAllowClones);
+      console.log("  - Detected pattern:", window.lastDetectedPattern);
+      console.log("  - Is Pattern 2:", isPattern2);
       console.log("  - Final enableCloneGeneration:", finalEnableCloneGeneration);
       
       // 질문 문장 애니메이션 로직 (isPlayBtnQuestionTouched 로직과 유사)
@@ -1922,13 +2300,15 @@ function triggerSentenceWordAnimation(sentenceObject, isQuestion, allWordRects, 
 
       if (firstWordIndexInRects + 1 < relevantWordRects.length) {
         const secondWordRect = relevantWordRects[firstWordIndexInRects + 1];
-        const secondWordTextClean = secondWordRect.word.toLowerCase().replace(/[^a-z0-9']/g, "");        if (isAux(secondWordTextClean) || isAuxiliaryContraction(secondWordTextClean)) {
+        const secondWordTextClean = secondWordRect.word.toLowerCase().replace(/[^a-z0-9']/g, "");
+
+        if (isAux(secondWordTextClean)) {
           wordsToAnimateSubsequently.push(secondWordRect);
 
           if (firstWordIndexInRects + 2 < relevantWordRects.length) {
             const thirdWordRect = relevantWordRects[firstWordIndexInRects + 2];
             const thirdWordTextClean = thirdWordRect.word.toLowerCase().replace(/[^a-z0-9']/g, "");
-            if (thirdWordTextClean === "have" || (!isVerb(thirdWordTextClean) && !isAux(thirdWordTextClean) && !isAuxiliaryContraction(thirdWordTextClean))) {
+            if (thirdWordTextClean === "have" || (!isVerb(thirdWordTextClean) && !isAux(thirdWordTextClean))) {
                wordsToAnimateSubsequently.push(thirdWordRect);
             }
           }
@@ -1950,10 +2330,11 @@ function triggerSentenceWordAnimation(sentenceObject, isQuestion, allWordRects, 
       const fullSentenceText = (sentenceObject.line1 + " " + sentenceObject.line2).trim();
       const wordsInSentence = fullSentenceText.split(" ").filter(w => w.length > 0);
 
-      if (wordsInSentence.length > 0) {        let subjectEndIndex = -1;
+      if (wordsInSentence.length > 0) {
+        let subjectEndIndex = -1;
         for (let i = 0; i < wordsInSentence.length; i++) {
-          if (isAux(wordsInSentence[i]) || isAuxiliaryContraction(wordsInSentence[i]) ||
-              (isVerb(wordsInSentence[i]) && !isAux(wordsInSentence[i]) && !isAuxiliaryContraction(wordsInSentence[i])) ||
+          if (isAux(wordsInSentence[i]) ||
+              (isVerb(wordsInSentence[i]) && !isAux(wordsInSentence[i])) ||
               isVing(wordsInSentence[i]) ||
               isBeen(wordsInSentence[i])) {
             subjectEndIndex = i - 1;
@@ -1965,9 +2346,11 @@ function triggerSentenceWordAnimation(sentenceObject, isQuestion, allWordRects, 
         }
 
         let auxWordForAnimation = null;
-        let auxWordGlobalIndexInSentence = -1;        if (subjectEndIndex >= 0 && (subjectEndIndex + 1) < wordsInSentence.length) {
+        let auxWordGlobalIndexInSentence = -1;
+
+        if (subjectEndIndex >= 0 && (subjectEndIndex + 1) < wordsInSentence.length) {
           const potentialAux = wordsInSentence[subjectEndIndex + 1];
-          if (isAux(potentialAux) || isAuxiliaryContraction(potentialAux)) {
+          if (isAux(potentialAux)) {
             auxWordForAnimation = potentialAux;
             auxWordGlobalIndexInSentence = subjectEndIndex + 1;
           }
@@ -2014,12 +2397,32 @@ function drawSingleSentenceBlock(sentenceObject, baseY, isQuestionBlock, blockCo
     let lastDrawnTextBottomY = baseY;
 
     const sentenceFullText = (sentenceObject.line1 + " " + sentenceObject.line2).trim();
-    const isCurrentBlockContentQuestionType = isQuestion(sentenceFullText);
-
-
-    for (let i = 0; i < lines.length; i++) {
+    const isCurrentBlockContentQuestionType = isQuestion(sentenceFullText);    for (let i = 0; i < lines.length; i++) {
         const lineText = lines[i];
         let currentLineCenterY = yFirstLineTextCenter + i * LINE_HEIGHT;
+          // 각 줄마다 색상 플래그 초기화 (줄별로 독립적으로 색상 처리)
+        // 의문문과 답변문을 분리해서 처리
+        if (isCurrentBlockContentQuestionType) {
+            // 의문문 문장일 경우, 원래 색상 로직 유지
+            if (i === 0) {
+                blockContext.verbColored = false;
+                blockContext.auxColored = false;
+                blockContext.verbFoundInPattern2 = false;
+            } else if (i === 1) {
+                blockContext.verbColored = false;
+                blockContext.auxColored = false;
+            }
+        } else {
+            // 답변 문장일 경우, 각 줄마다 독립적으로 색상 플래그 초기화
+            if (i === 0) {
+                blockContext.verbColored = false; // 동사 색상 플래그 초기화 - 동사 하나만 노란색으로
+                blockContext.auxColored = false;  // 조동사 색상 플래그 초기화 - 조동사 하나만 파란색으로
+                blockContext.verbFoundInPattern2 = false;
+            } else if (i === 1) {
+                blockContext.verbColored = false;
+                blockContext.auxColored = false;
+            }
+        }
 
         if (isQuestionBlock) {
             if (i === 0) currentLineCenterY -= 10;
@@ -2043,33 +2446,82 @@ function drawSingleSentenceBlock(sentenceObject, baseY, isQuestionBlock, blockCo
         for (let j = 0; j < words.length; j++) {
             let rawWord = words[j];
             const wordStartX = currentX;
-            const measuredWordWidth = wordMetrics[j].width;
-
-            let lowerCleanedWordForColor = rawWord.toLowerCase().replace(/[^a-z0-9']/g, '');            let color = "#fff";
-            if (isCurrentBlockContentQuestionType && i === 0 && isWh(lowerCleanedWordForColor)) {
-                color = '#5DBB63';
-            } else if (isAux(lowerCleanedWordForColor) || isBeen(lowerCleanedWordForColor) || isVing(lowerCleanedWordForColor)) {
-                color = "#40b8ff";
-            } else if (i === 0 && isAuxiliaryContraction(lowerCleanedWordForColor)) {
-                // 첫 번째 줄에 있는 조동사 부정어를 파란색으로 표시
-                color = "#40b8ff";
-            } else if (i === 0 && j > 0 && hasAuxiliaryBefore(words, j) && !isVerb(lowerCleanedWordForColor)) {
-                // 첫 번째 줄에서 조동사 이후에 오는 모든 주어 구성 요소들을 파란색으로 표시
-                // (동사가 아닌 모든 단어들)
-                color = "#40b8ff";
-            } else if (isVerb(lowerCleanedWordForColor) && !blockContext.verbColored && !isAux(lowerCleanedWordForColor)) {
-                color = "#FFD600";
-                blockContext.verbColored = true;
-            }
-            if (color === "#fff" && isCurrentBlockContentQuestionType && i === 0) {
-                if (j === 1 && words.length > 1 && isAux(words[0].toLowerCase().replace(/[^a-z0-9']/g, ''))) {
-                    color = "#40b8ff";
-                } else if (j === 2 && words.length > 2 &&
-                         isWh(words[0].toLowerCase().replace(/[^a-z0-9']/g, '')) &&
-                         isAux(words[1].toLowerCase().replace(/[^a-z0-9']/g, ''))) {
+            const measuredWordWidth = wordMetrics[j].width;            let lowerCleanedWordForColor = rawWord.toLowerCase().replace(/[^a-z0-9']/g, '');
+            let originalLowerWord = rawWord.toLowerCase();
+            
+            // 기본 색상은 흰색
+            let color = "#fff"; 
+            
+            // 의문문 첫 번째 줄에서만 특별한 색상 규칙 적용
+            if (isCurrentBlockContentQuestionType && i === 0) {
+                // 특수문자 제거 및 소문자 변환된 배열 (색상 로직용)
+                const cleanedWords = words.map(w => w.toLowerCase().replace(/[^a-z0-9']/g, ''));
+                
+                // 첫 번째 단어가 의문사인지 확인
+                const isFirstWordWh = isWh(cleanedWords[0]);
+                
+                // 두 번째 단어가 조동사인지 확인 (있을 경우)
+                const isSecondWordAux = words.length > 1 ? isAux(cleanedWords[1]) : false;
+                  // 패턴 식별
+                const pattern1 = isFirstWordWh && isSecondWordAux && words.length > 3;
+                const pattern2 = isFirstWordWh && isSecondWordAux && words.length <= 3;
+                  // 패턴 2에서 동사 인식을 위한 플래그
+                let foundVerbInPattern2 = blockContext.verbFoundInPattern2 || false;
+                
+                // 패턴 2(의문사+조동사+동사)에서 동사 이후에 나오는 단어는 모두 흰색으로
+                if (pattern2 && foundVerbInPattern2 && j > 2) {
+                    color = "#fff"; // 패턴 2에서 동사 이후 모든 단어는 흰색
+                }
+                // 위치에 따른 색상 적용
+                else if (j === 0 && isFirstWordWh) {
+                    // 의문사 - 항상 녹색
+                    color = '#5DBB63';
+                }
+                else if (j === 1 && isSecondWordAux) {
+                    // 조동사 - 항상 파란색
                     color = "#40b8ff";
                 }
+                else if (j === 2) {
+                    // 세 번째 단어
+                    if (pattern1) {
+                        // 패턴 1: 의문사 + 조동사 + 주어 + 동사
+                        color = "#40b8ff"; // 주어는 파란색
+                    } else if (pattern2 && isVerb(cleanedWords[2])) {
+                        // 패턴 2: 의문사 + 조동사 + 동사
+                        color = "#FFD600"; // 동사는 노란색
+                        blockContext.verbFoundInPattern2 = true; // 패턴 2에서 동사 발견 표시
+                    }
+                }
+                else if (j === 3 && pattern1 && isVerb(cleanedWords[3])) {
+                    // 패턴 1의 네 번째 단어 (동사)
+                    color = "#FFD600"; // 동사는 노란색
+                }
+            }            // 의문문의 둘째줄은 모두 흰색으로 표시
+            else if (isCurrentBlockContentQuestionType && i === 1) {
+                // 모든 단어를 흰색으로 표시 (이미 기본 색상이 흰색이므로 추가 작업 불필요)
+                color = "#fff"; // 명시적으로 흰색 설정
+            }            // 답변 문장 (의문문이 아닌 경우)에는 조동사 하나만 파란색, 본동사 하나만 노란색, 나머지 모두 흰색
+            else if (!isCurrentBlockContentQuestionType) {
+                // 기본적으로 모든 단어는 흰색
+                color = "#fff"; 
+                
+                // 조동사 체크 - 한 문장에 하나의 조동사만 파란색으로
+                if (isAux(lowerCleanedWordForColor) || isBeen(lowerCleanedWordForColor) && !blockContext.auxColored) {
+                    color = "#40b8ff"; // 조동사는 파란색
+                    blockContext.auxColored = true; // 조동사 색상 적용 표시
+                } 
+                // 본동사 체크 - 한 문장에 본동사 하나만 노란색으로
+                else if (!blockContext.verbColored && isMainVerb(lowerCleanedWordForColor, j, words.length)) {
+                    color = "#FFD600"; // 본동사는 노란색
+                    blockContext.verbColored = true; // 동사 색상 적용 표시
+                }
+                // 나머지 모든 단어(다른 동사 포함)는 흰색 (이미 기본값으로 설정됨)
             }
+            
+            // 디버그용 콘솔 로그 (필요시 활성화)
+            // if (isCurrentBlockContentQuestionType && i === 0) {
+            //     console.log(`Word: ${rawWord}, Position: ${j}, Color: ${color}`);
+            // }
             ctx.fillStyle = color;
 
             const currentWordRectData = {
@@ -2177,7 +2629,7 @@ function drawCenterSentence() {
     const mainRenderAreaYCenter = topOffset + (canvas.height - topOffset) / 2;
     const questionBlockCenterY = mainRenderAreaYCenter + SENTENCE_VERTICAL_ADJUSTMENT;
 
-    let questionBlockContext = { verbColored: false };
+    let questionBlockContext = { verbColored: false, auxColored: false, verbFoundInPattern2: false };
     let questionDrawOutput = { lastY: questionBlockCenterY - LINE_HEIGHT, wordRects: [] };
 
     const baseOverallScale = 0.49;
@@ -2239,7 +2691,7 @@ function drawCenterSentence() {
             drawPlayButton(playButtonRect, currentVisualScaleForHitbox);
         }
 
-        let answerBlockContext = { verbColored: false };
+        let answerBlockContext = { verbColored: false, auxColored: false, verbFoundInPattern2: false };
         const answerDrawOutput = drawSingleSentenceBlock(currentAnswerSentence, topYForAnswerBlock, false, answerBlockContext);
         newWordRects.push(...answerDrawOutput.wordRects);
 
@@ -2289,50 +2741,6 @@ function drawCenterSentence() {
             
             ctx.textAlign = "left"; // 다시 기본값으로 복원
         });
-          ctx.restore();
-    }
-
-    // 화살표 애니메이션 렌더링 (의문사 복제본과 주어+조동사 복제본 사이)
-    if (arrowAnimationActive && arrowAnimationProgress > 0) {
-        ctx.save();
-        ctx.globalAlpha = centerAlpha * 0.8; // 약간 투명하게
-          // 현재 애니메이션 진행도에 따른 화살표 위치 계산
-        const currentX = arrowStartX + (arrowEndX - arrowStartX) * arrowAnimationProgress;
-        const currentY = arrowStartY + (arrowEndY - arrowStartY) * arrowAnimationProgress;
-        
-        // 화살표 방향 계산
-        const deltaX = arrowEndX - arrowStartX;
-        const deltaY = arrowEndY - arrowStartY;
-        const angle = Math.atan2(deltaY, deltaX);        // 화살표 끝점을 2px 더 진행하도록 연장하고, 전체 화살표를 x축 좌측으로 2px, y축 위쪽으로 1px 이동
-        const extendedCurrentX = currentX + Math.cos(angle) * 2 - 2;
-        const extendedCurrentY = currentY + Math.sin(angle) * 2 - 1;// 화살표 그리기
-        ctx.strokeStyle = '#ffff00'; // 노란색 화살표
-        ctx.fillStyle = '#ffff00';
-        ctx.lineWidth = 1.6; // 20% 감소 (2 → 1.6)
-        ctx.lineCap = 'round';
-        
-        const arrowLength = 12; // 20% 감소 (15 → 12)
-        const arrowHeadLength = 6.4; // 20% 감소 (8 → 6.4)
-        const arrowHeadAngle = Math.PI / 6; // 30도
-          // 화살표 몸체 그리기
-        ctx.beginPath();
-        ctx.moveTo(extendedCurrentX - Math.cos(angle) * arrowLength, extendedCurrentY - Math.sin(angle) * arrowLength);
-        ctx.lineTo(extendedCurrentX, extendedCurrentY);
-        ctx.stroke();
-        
-        // 화살표 머리 그리기
-        ctx.beginPath();
-        ctx.moveTo(extendedCurrentX, extendedCurrentY);
-        ctx.lineTo(
-          extendedCurrentX - arrowHeadLength * Math.cos(angle - arrowHeadAngle),
-          extendedCurrentY - arrowHeadLength * Math.sin(angle - arrowHeadAngle)
-        );
-        ctx.moveTo(extendedCurrentX, extendedCurrentY);
-        ctx.lineTo(
-          extendedCurrentX - arrowHeadLength * Math.cos(angle + arrowHeadAngle),
-          extendedCurrentY - arrowHeadLength * Math.sin(angle + arrowHeadAngle)
-        );
-        ctx.stroke();
         
         ctx.restore();
     }
@@ -2344,65 +2752,51 @@ function drawCenterSentence() {
         ctx.font = englishFont;
         ctx.textAlign = "left";
         ctx.textBaseline = "middle";        subjectAuxClones.forEach(clone => {
-            // 순서 바뀜 애니메이션 상태 확인
-            const isSwapAnimationActive = clone.isSwapAnimationActive;
-            const isSwapCompleted = clone.swapAnimationStartTime && 
-                                  !clone.isSwapAnimationActive && 
-                                  (performance.now() - clone.swapAnimationStartTime) >= WORD_SWAP_ANIMATION_DURATION;
+            // 복제본 텍스트 그리기 (조동사는 파란색, 주어는 흰색)
+            const auxLength = clone.auxWord.length;
+            const spaceLength = 1; // 공백 문자 1개
             
-            if (isSwapAnimationActive) {
-                // 애니메이션 중: 조동사와 주어 문자들을 개별적으로 렌더링
+            // 애니메이션 중이거나 완료 후 색상 적용
+            if ((clone.animationPhase === 'swapping' || (clone.animationPhase === 'stationary' && clone.swapStartTime > 0))) {
+                // 조동사 부분(0 ~ auxLength)
+                const auxChars = clone.charPositions.slice(0, clone.auxLength);
+                // 공백(auxLength)
+                const spaceChar = clone.charPositions[clone.auxLength];
+                // 주어 부분(auxLength+1 ~ end)
+                const subjectChars = clone.charPositions.slice(clone.auxLength + 1);
                 
-                // 조동사 문자들 렌더링 (파란색)
-                ctx.fillStyle = '#40b8ff';
-                clone.auxCharPositions.forEach(charPos => {
+                // 교환 애니메이션 중에도 원래 색상 유지
+                // 조동사는 항상 파란색
+                auxChars.forEach(charPos => {
+                    ctx.fillStyle = '#40b8ff'; // 조동사 - 파란색
                     ctx.fillText(charPos.char, charPos.x, charPos.currentY);
                 });
                 
-                // 주어 문자들 렌더링 (흰색)
+                // 공백은 흰색
                 ctx.fillStyle = '#ffffff';
-                clone.subjectCharPositions.forEach(charPos => {
+                ctx.fillText(spaceChar.char, spaceChar.x, spaceChar.currentY);
+                
+                // 주어는 항상 흰색
+                subjectChars.forEach(charPos => {
+                    ctx.fillStyle = '#ffffff'; // 주어 - 흰색
                     ctx.fillText(charPos.char, charPos.x, charPos.currentY);
                 });
-                
-                // 공백 렌더링 (흰색)
-                const spaceChar = clone.charPositions.find(cp => cp.char === ' ');
-                if (spaceChar) {
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillText(spaceChar.char, spaceChar.x, spaceChar.currentY);
-                }
-                
-            } else {
-                // 일반 렌더링 (애니메이션 전/후)
-                clone.charPositions.forEach((charPos, index) => {
-                    if (!isSwapCompleted) {
-                        // 원래 순서: 조동사(파란색) + 주어(흰색)
-                        const auxLength = clone.auxWord.length;
-                        const spaceLength = 1;
-                        
-                        if (index < auxLength) {
-                            ctx.fillStyle = '#40b8ff'; // 조동사 - 파란색
-                        } else if (index < auxLength + spaceLength) {
-                            ctx.fillStyle = '#ffffff'; // 공백 - 흰색
-                        } else {
-                            ctx.fillStyle = '#ffffff'; // 주어 - 흰색
-                        }
-                    } else {
-                        // 순서 바뀜 완료: 주어(흰색) + 조동사(파란색)
-                        const subjectLength = clone.subjectWord.length;
-                        const spaceLength = 1;
-                        
-                        if (index < subjectLength) {
-                            ctx.fillStyle = '#ffffff'; // 주어 - 흰색
-                        } else if (index < subjectLength + spaceLength) {
-                            ctx.fillStyle = '#ffffff'; // 공백 - 흰색
-                        } else {
-                            ctx.fillStyle = '#40b8ff'; // 조동사 - 파란색
-                        }
-                    }
-                    ctx.fillText(charPos.char, charPos.x, charPos.currentY);
-                });
+                return; // 이미 그렸으므로 아래 코드 실행하지 않음
             }
+            
+            // 기본 상태일 때 색상 적용
+            clone.charPositions.forEach((charPos, index) => {
+                if (index < auxLength) {
+                    // 조동사 부분 - 파란색
+                    ctx.fillStyle = '#40b8ff';
+                } else if (index < auxLength + spaceLength) {
+                    // 공백 부분 - 흰색
+                    ctx.fillStyle = '#ffffff';
+                } else {
+                    // 주어 부분 - 흰색
+                    ctx.fillStyle = '#ffffff';
+                }
+                ctx.fillText(charPos.char, charPos.x, charPos.currentY);            });
         });
           ctx.restore();
     }
@@ -2556,15 +2950,13 @@ function startFireworks(sentenceTextForFireworks, globalSentenceIndex, explosion
     const baseRadius = 51.2 * 0.88; const maxRadius = 120.96 * 0.88 * 0.95; // Adjusted maxRadius
     let centerX = explosionX; const margin = 8;
     if (centerX - maxRadius < margin) centerX = margin + maxRadius;
-    if (centerX + maxRadius > canvas.width - margin) centerX = canvas.width - margin - maxRadius;
-
-    fireworks = [];
-    fireworksState = {
-        t: 0, phase: "explode", holdDuration: 60, explodeDuration: 180, gatherDuration: 45,
+    if (centerX + maxRadius > canvas.width - margin) centerX = canvas.width - margin - maxRadius;    fireworks = [];    fireworksState = {
+        t: 0, phase: "explode", holdDuration: 40, explodeDuration: 180, gatherDuration: 170, // 50에서 170으로 늘림 (약 2초 추가)
         originX: centerX, originY: explosionY,
         sentenceTextToDisplayAfter: sentenceTextForFireworks,
         finalSentenceIndex: globalSentenceIndex,
         roleOfNewSentence: roleOfNewSentence,
+        isMobileDevice: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
     };
 
     const mainRenderAreaYCenter = topOffset + (canvas.height - topOffset) / 2;
@@ -2625,6 +3017,12 @@ function startFireworks(sentenceTextForFireworks, globalSentenceIndex, explosion
 
 function updateFireworks() {
   if (!fireworks || !fireworksState) return false;
+  
+  // 모바일 장치 감지 속성이 없으면 추가
+  if (fireworksState.isMobileDevice === undefined) {
+    fireworksState.isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  }
+  
   fireworksState.t++;
 
   if (fireworksState.phase === "explode") {
@@ -2641,10 +3039,22 @@ function updateFireworks() {
     if (fireworksState.t >= fireworksState.holdDuration) {
       fireworksState.phase = "gather"; fireworksState.t = 0;
       centerAlpha = 0;
-    }
-  } else if (fireworksState.phase === "gather") {
+    }  } else if (fireworksState.phase === "gather") {
     const progress = Math.min(fireworksState.t / fireworksState.gatherDuration, 1);
-    const ease = Math.pow(progress, 2);
+    // 핸드폰 모드에서만 더 정확하고 부드러운 이징 적용
+    let ease;
+    if (fireworksState.isMobileDevice) {
+      // 핸드폰에서는 경로를 따라 자연스럽게 이동하는 이징
+      ease = Math.sin(progress * Math.PI / 2); // 0에서 시작하여 1로 부드럽게 증가
+    } else {
+      // PC에서는 기존 이징 로직 유지
+      ease = progress < 0.6 ? Math.pow(progress, 2) : 1 - Math.pow(1 - progress, 3);
+    }
+    
+    // 경로 초기화가 필요한 경우를 위해 플래그 설정
+    if (fireworksState.t === 1) {
+      fireworksState.pathsInitialized = false;
+    }
     const tempCtx = canvas.getContext('2d');
     tempCtx.font = englishFont;
     const isGatherSentenceQuestion = fireworksState.roleOfNewSentence === 'question';
@@ -2654,9 +3064,7 @@ function updateFireworks() {
     if(sentenceLine2Gather.trim()) sentenceLineWordArrays.push(sentenceLine2Gather.split(" "));
 
     const originalSpaceWidthFireworks = tempCtx.measureText(" ").width;
-    const adjustedSpaceWidthFireworks = originalSpaceWidthFireworks * 1.20;
-
-    let wordIndexInFireworks = 0;
+    const adjustedSpaceWidthFireworks = originalSpaceWidthFireworks * 1.20;    let wordIndexInFireworks = 0;
     for (let i = 0; i < sentenceLineWordArrays.length; i++) {
         const wordsInLine = sentenceLineWordArrays[i];
         let wordMetrics = wordsInLine.map(w => tempCtx.measureText(w));
@@ -2670,7 +3078,15 @@ function updateFireworks() {
         let currentXTargetForWord = (canvas.width - currentLineTotalWidth) / 2;
         for (let j = 0; j < wordsInLine.length; j++) {
             if (fireworks[wordIndexInFireworks]) {
-                fireworks[wordIndexInFireworks].targetX = currentXTargetForWord;
+                // 각 단어에 정확한 목표 위치 설정
+                fireworks[wordIndexInFireworks].targetX = currentXTargetForWord + (wordMetrics[j].width / 2);
+                // 목표 위치에 도달 여부를 저장하는 플래그 추가
+                fireworks[wordIndexInFireworks].reachedTarget = false;
+                // 단어 인덱스를 저장 (줄과 위치를 기억)
+                fireworks[wordIndexInFireworks].lineIndex = i;
+                fireworks[wordIndexInFireworks].wordIndex = j;
+                
+                // 다음 단어의 x 위치 계산
                 currentXTargetForWord += wordMetrics[j].width;
                 if (j < wordsInLine.length - 1) {
                     currentXTargetForWord += adjustedSpaceWidthFireworks;
@@ -2679,12 +3095,70 @@ function updateFireworks() {
             wordIndexInFireworks++;
         }
     }
-
+    
+    // 모바일에서 단어들이 서로 겹치지 않게 확인
+    if (fireworksState.isMobileDevice && !fireworksState.pathsInitialized && fireworksState.t === 1) {
+        // 각 단어마다 유일한 경로와 시작/끝 위치를 설정
+        for (let i = 0; i < fireworks.length; i++) {
+            // 시작 위치는 폭발 단계에서 이미 설정됨
+            // 끝 위치는 단어의 최종 위치
+            fireworks[i].originalTargetX = fireworks[i].targetX;
+            fireworks[i].originalTargetY = fireworks[i].targetY;
+        }
+        fireworksState.pathsInitialized = true;
+    }// 첫 프레임에서만 초기 위치와 목표 위치를 저장 (경로가 겹치지 않도록)
+    if (fireworksState.t === 1) {
+      fireworks.forEach((fw) => {
+        fw.startX = fw.x;
+        fw.startY = fw.y;
+        fw.pathAngle = Math.atan2(fw.targetY - fw.y, fw.targetX - fw.x);
+        // 약간의 변동성을 주어 단어들이 서로 다른 경로로 이동하도록 함
+        fw.pathVariation = (Math.random() * 0.4) - 0.2;
+      });
+    }
+    
     fireworks.forEach((fw) => {
-      fw.x += (fw.targetX - fw.x) * ease * 0.2;
-      fw.y += (fw.targetY - fw.y) * ease * 0.2;
+      // 핸드폰에서는 단어들이 직접적인 경로로 정확하게 이동
+      if (fireworksState.isMobileDevice) {
+        // 베지어 곡선 방식으로 직접적인 경로를 만듦
+        const t = ease;
+        const startX = fw.startX;
+        const startY = fw.startY;
+        const endX = fw.targetX;
+        const endY = fw.targetY;
+        
+        // 곡선 제어점 계산 (단어 별로 경로가 약간 다르게 설정됨)
+        const controlX = startX + (endX - startX) * 0.5 + Math.cos(fw.pathAngle + Math.PI/2) * 30 * fw.pathVariation;
+        const controlY = startY + (endY - startY) * 0.5 + Math.sin(fw.pathAngle + Math.PI/2) * 30 * fw.pathVariation;
+        
+        // 2차 베지어 곡선으로 위치 계산 (t 값에 따른 정확한 위치)
+        fw.x = Math.pow(1-t, 2) * startX + 2 * (1-t) * t * controlX + Math.pow(t, 2) * endX;
+        fw.y = Math.pow(1-t, 2) * startY + 2 * (1-t) * t * controlY + Math.pow(t, 2) * endY;
+        
+        // 끝부분에서는 정확히 목표 위치에 도달
+        if (progress > 0.95) {
+          fw.x = fw.targetX;
+          fw.y = fw.targetY;
+        }
+      } else {
+        // PC에서는 기존 이동 방식 유지
+        const smoothedEase = progress < 0.8 ? ease : 1 - Math.pow(1 - progress, 3);
+        const moveSpeed = 0.3;
+        fw.x += (fw.targetX - fw.x) * smoothedEase * moveSpeed;
+        fw.y += (fw.targetY - fw.y) * smoothedEase * moveSpeed;
+      }
     });
-    centerAlpha += (1.0 - centerAlpha) * ease * 0.15;
+      // 핸드폰에서는 투명도 변화도 더 천천히
+    const alphaSpeed = fireworksState.isMobileDevice ? 0.15 : 0.25;
+    centerAlpha += (1.0 - centerAlpha) * ease * alphaSpeed;
+    
+    // 애니메이션 마지막 5%에서는 모든 단어를 정확한 위치로 고정
+    if (fireworksState.isMobileDevice && progress >= 0.95) {
+        fireworks.forEach(fw => {
+            fw.x = fw.targetX; // 정확한 X 위치로 고정
+            fw.y = fw.targetY; // 정확한 Y 위치로 고정
+        });
+    }
 
     if (progress >= 1) {
         fireworksState.phase = "done";
@@ -2941,14 +3415,10 @@ function update(delta) {
   if (verbClones.length > 0) {
     updateVerbClones(performance.now());
   }
-    // Update bounce animations
+  
+  // Update bounce animations
   if (activeBounceAnimations.length > 0) {
     updateBounceAnimations(performance.now());
-  }
-  
-  // Update arrow animation
-  if (arrowAnimationActive) {
-    updateArrowAnimation(performance.now());
   }
 }
 
@@ -3048,43 +3518,39 @@ function resetGameStateForStartStop() {
 }
 
 function startGame() {
-  console.log("🎮 Starting game...");
-  
   calculateTopOffset();
-  
-  console.log("✅ Starting game...");
-  
-  isGameRunning = true; 
-  isGamePaused = false;
+  if (!allAssetsReady) {
+    console.warn("Assets not ready. Please wait and try starting again.");
+    ctx.fillStyle = "white"; ctx.font = "16px Arial"; ctx.textAlign = "center";
+    ctx.fillText("이미지 및 비디오 로딩 중... 잠시 후 다시 시도하세요.", canvas.width / 2, canvas.height / 2);
+    return;
+  }
+  isGameRunning = true; isGamePaused = false;
   document.getElementById('pauseBtn').textContent = 'PAUSE';
-  
-  // BGM 시작
   if (bgmAudio) { bgmAudio.pause(); }
   bgmAudio = new Audio(bgmFiles[bgmIndex]);
-  bgmAudio.volume = isMuted ? 0 : 0.021; 
-  bgmAudio.loop = true;
-  bgmAudio.play().catch(error => console.error('BGM play error:', error));
-  
-  // 비디오 시작
-  if (coffeeSteamVideo) {
-    coffeeSteamVideo.currentTime = 0;
-    coffeeSteamVideo.play().catch(error => console.error("Video play error:", error));
+  bgmAudio.volume = isMuted ? 0 : 0.021; bgmAudio.loop = true;
+  const playPromise = bgmAudio.play();
+  if (playPromise !== undefined) {
+    playPromise.catch(error => { console.error('BGM play error on start:', error); });
   }
-  
+  if (coffeeSteamVideo && coffeeVideoAssetReady) {
+    coffeeSteamVideo.currentTime = 0;
+    const coffeePlayPromise = coffeeSteamVideo.play();
+    if (coffeePlayPromise !== undefined) {
+      coffeePlayPromise.catch(error => console.error("Error playing coffee steam video:", error));
+    }
+  }
   resetGameStateForStartStop();
-  
   let storedIndex = Number(localStorage.getItem('sentenceIndex') || 0);
   sentenceIndex = storedIndex % sentences.length;
   localStorage.setItem('sentenceIndex', sentenceIndex.toString());
-  
-  spawnEnemy(); 
-  spawnEnemy();
-  
+  spawnEnemy(); spawnEnemy();
   player.x = canvas.width / 2 - PLAYER_SIZE / 2;
   player.y = topOffset + (canvas.height - topOffset) - PLAYER_SIZE - 10;
   player.y = Math.max(topOffset, player.y);
-  
   lastTime = performance.now();
+  getVoicesReliably().catch(err => console.error("startGame: Error during voice pre-warming:", err));
   requestAnimationFrame(gameLoop);
 }
 
@@ -3214,9 +3680,49 @@ function handleCanvasInteraction(clientX, clientY, event) {
       event.preventDefault();
       setTimeout(() => { isActionLocked = false; }, 200);
       return;
-    }
-
-    if ((currentQuestionSentence || currentAnswerSentence) && centerSentenceWordRects.length > 0) {
+    }    if ((currentQuestionSentence || currentAnswerSentence) && centerSentenceWordRects.length > 0) {
+        // 첫 번째 문장의 경계 상자 계산 (모든 문장 단어 포함)
+        let questionBoundingBox = null;
+        let answerBoundingBox = null;
+        
+        if (currentQuestionSentence && centerSentenceWordRects.some(rect => rect.isQuestionWord !== undefined)) {
+            const questionWordRects = centerSentenceWordRects.filter(rect => rect.isQuestionWord === true || rect.isQuestionWord === undefined);
+            if (questionWordRects.length > 0) {
+                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                questionWordRects.forEach(rect => {
+                    minX = Math.min(minX, rect.x - expandedMargin);
+                    minY = Math.min(minY, rect.y - rect.h / 2 - expandedMargin);
+                    maxX = Math.max(maxX, rect.x + rect.w + expandedMargin);
+                    maxY = Math.max(maxY, rect.y + rect.h / 2 + expandedMargin);
+                });
+                questionBoundingBox = { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+            }
+        }
+        
+        if (currentAnswerSentence && centerSentenceWordRects.some(rect => rect.isQuestionWord !== undefined)) {
+            const answerWordRects = centerSentenceWordRects.filter(rect => rect.isQuestionWord === false);
+            if (answerWordRects.length > 0) {
+                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                answerWordRects.forEach(rect => {
+                    minX = Math.min(minX, rect.x - expandedMargin);
+                    minY = Math.min(minY, rect.y - rect.h / 2 - expandedMargin);
+                    maxX = Math.max(maxX, rect.x + rect.w + expandedMargin);
+                    maxY = Math.max(maxY, rect.y + rect.h / 2 + expandedMargin);
+                });
+                answerBoundingBox = { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+            }
+        }
+        
+        // 클릭이 문장 영역 안에 있는지 확인
+        const isInQuestionBox = questionBoundingBox && 
+            clientX >= questionBoundingBox.x && clientX <= questionBoundingBox.x + questionBoundingBox.width &&
+            clientY >= questionBoundingBox.y && clientY <= questionBoundingBox.y + questionBoundingBox.height;
+            
+        const isInAnswerBox = answerBoundingBox && 
+            clientX >= answerBoundingBox.x && clientX <= answerBoundingBox.x + answerBoundingBox.width &&
+            clientY >= answerBoundingBox.y && clientY <= answerBoundingBox.y + answerBoundingBox.height;
+        
+        // 특정 단어가 클릭되었는지 확인
         for (const wordRect of centerSentenceWordRects) {
           if (clientX >= (wordRect.x - expandedMargin/2) && clientX <= (wordRect.x + wordRect.w + expandedMargin/2) &&
               clientY >= (wordRect.y - wordRect.h / 2 - expandedMargin/2) && clientY <= (wordRect.y + wordRect.h / 2 + expandedMargin/2) ) {
@@ -3235,13 +3741,20 @@ function handleCanvasInteraction(clientX, clientY, event) {
                     if (activeWordTranslation && activeWordTranslation.word === wordRect.word) activeWordTranslation.show = false;
                 }, WORD_TRANSLATION_DURATION);
             }).catch(err => console.error("Error getting word translation:", err));
-            showTranslationForQuestion = false; showTranslationForAnswer = false;
-            event.preventDefault(); setTimeout(() => { isActionLocked = false; }, 300); return;
+            showTranslationForQuestion = false; showTranslationForAnswer = false;            event.preventDefault(); setTimeout(() => { isActionLocked = false; }, 300); return;
           }
+        }
+        
+        // 문장 영역 안에서 클릭한 경우 (단어가 직접 클릭되지 않았더라도)
+        if (isInQuestionBox || isInAnswerBox) {
+            console.log("클릭이 문장 영역 안에서 발생했습니다: " + (isInQuestionBox ? "질문 문장" : "답변 문장"));
+            event.preventDefault();
+            return; // 비행기 이동 방지
         }
     }
   }
 
+  // 문장 영역 밖에서만 비행기 이동
   player.x = clientX - player.w / 2;
   if (event.type === 'touchstart' || event.type === 'touchmove') player.y = clientY - player.h / 2 - PLAYER_TOUCH_Y_OFFSET;
   else player.y = clientY - player.h / 2;
@@ -3285,12 +3798,58 @@ canvas.addEventListener('touchmove', e => {
   const touch = e.touches[0];
   const isOverPlayBtnQ = showPlayButtonQuestion && playButtonRectQuestion &&
     touch.clientX >= (playButtonRectQuestion.x - expandedMargin) && touch.clientX <= (playButtonRectQuestion.x + playButtonRectQuestion.w + expandedMargin) &&
-    touch.clientY >= (playButtonRectQuestion.y - expandedMargin) && clientY <= (playButtonRectQuestion.y + playButtonRectQuestion.h + expandedMargin);
+    touch.clientY >= (playButtonRectQuestion.y - expandedMargin) && touch.clientY <= (playButtonRectQuestion.y + playButtonRectQuestion.h + expandedMargin);
   const isOverPlayBtnA = showPlayButton && playButtonRect &&
-    touch.clientX >= (playButtonRect.x - expandedMargin) && clientX <= (playButtonRect.x + playButtonRect.w + expandedMargin) &&
-    touch.clientY >= (playButtonRect.y - expandedMargin) && clientY <= (playButtonRect.y + playButtonRect.h + expandedMargin);
+    touch.clientX >= (playButtonRect.x - expandedMargin) && touch.clientX <= (playButtonRect.x + playButtonRect.w + expandedMargin) &&
+    touch.clientY >= (playButtonRect.y - expandedMargin) && touch.clientY <= (playButtonRect.y + playButtonRectQuestion.h + expandedMargin);
+  
+  // 문장 영역 확인
+  let isOverSentenceArea = false;
   let isOverWord = false;
+  
   if ((currentQuestionSentence || currentAnswerSentence) && centerSentenceWordRects.length > 0) {
+    // 문장 바운딩 박스 계산
+    let questionBoundingBox = null;
+    let answerBoundingBox = null;
+    
+    if (currentQuestionSentence && centerSentenceWordRects.some(rect => rect.isQuestionWord !== undefined)) {
+      const questionWordRects = centerSentenceWordRects.filter(rect => rect.isQuestionWord === true || rect.isQuestionWord === undefined);
+      if (questionWordRects.length > 0) {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        questionWordRects.forEach(rect => {
+          minX = Math.min(minX, rect.x - expandedMargin);
+          minY = Math.min(minY, rect.y - rect.h / 2 - expandedMargin);
+          maxX = Math.max(maxX, rect.x + rect.w + expandedMargin);
+          maxY = Math.max(maxY, rect.y + rect.h / 2 + expandedMargin);
+        });
+        questionBoundingBox = { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+      }
+    }
+    
+    if (currentAnswerSentence && centerSentenceWordRects.some(rect => rect.isQuestionWord !== undefined)) {
+      const answerWordRects = centerSentenceWordRects.filter(rect => rect.isQuestionWord === false);
+      if (answerWordRects.length > 0) {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        answerWordRects.forEach(rect => {
+          minX = Math.min(minX, rect.x - expandedMargin);
+          minY = Math.min(minY, rect.y - rect.h / 2 - expandedMargin);
+          maxX = Math.max(maxX, rect.x + rect.w + expandedMargin);
+          maxY = Math.max(maxY, rect.y + rect.h / 2 + expandedMargin);
+        });
+        answerBoundingBox = { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+      }
+    }
+    
+    // 터치가 문장 영역 안에 있는지 확인
+    isOverSentenceArea = 
+      (questionBoundingBox && 
+       touch.clientX >= questionBoundingBox.x && touch.clientX <= questionBoundingBox.x + questionBoundingBox.width &&
+       touch.clientY >= questionBoundingBox.y && touch.clientY <= questionBoundingBox.y + questionBoundingBox.height) ||
+      (answerBoundingBox && 
+       touch.clientX >= answerBoundingBox.x && touch.clientX <= answerBoundingBox.x + answerBoundingBox.width &&
+       touch.clientY >= answerBoundingBox.y && touch.clientY <= answerBoundingBox.y + answerBoundingBox.height);
+       
+    // 단어 검사 (기존 코드)
     for (const wordRect of centerSentenceWordRects) {
       if ( touch.clientX >= wordRect.x && touch.clientX <= wordRect.x + wordRect.w &&
            touch.clientY >= wordRect.y - wordRect.h/2 && touch.clientY <= wordRect.y + wordRect.h/2 ) {
@@ -3298,7 +3857,8 @@ canvas.addEventListener('touchmove', e => {
       }
     }
   }
-  if (isOverPlayBtnQ || isOverPlayBtnA || isOverWord) { e.preventDefault(); return; }
+  
+  if (isOverPlayBtnQ || isOverPlayBtnA || isOverWord || isOverSentenceArea) { e.preventDefault(); return; }
 
   player.x = touch.clientX - player.w / 2;
   player.y = touch.clientY - player.h / 2 - PLAYER_TOUCH_Y_OFFSET;
@@ -3314,9 +3874,55 @@ canvas.addEventListener('mousemove', e => {
       e.clientY >= (playButtonRectQuestion.y - expandedMargin) && e.clientY <= (playButtonRectQuestion.y + playButtonRectQuestion.h + expandedMargin);
   const isOverPlayBtnA = showPlayButton && playButtonRect &&
       e.clientX >= (playButtonRect.x - expandedMargin) && e.clientX <= (playButtonRect.x + playButtonRect.w + expandedMargin) &&
-      e.clientY >= (playButtonRect.y - expandedMargin) && clientY <= (playButtonRect.y + playButtonRect.h + expandedMargin);
+      e.clientY >= (playButtonRect.y - expandedMargin) && e.clientY <= (playButtonRect.y + playButtonRect.h + expandedMargin);
+      
+  // 문장 영역 확인
+  let isOverSentenceArea = false;
   let isOverWord = false;
+  
   if ((currentQuestionSentence || currentAnswerSentence) && centerSentenceWordRects.length > 0) {
+    // 문장 바운딩 박스 계산
+    let questionBoundingBox = null;
+    let answerBoundingBox = null;
+    
+    if (currentQuestionSentence && centerSentenceWordRects.some(rect => rect.isQuestionWord !== undefined)) {
+      const questionWordRects = centerSentenceWordRects.filter(rect => rect.isQuestionWord === true || rect.isQuestionWord === undefined);
+      if (questionWordRects.length > 0) {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        questionWordRects.forEach(rect => {
+          minX = Math.min(minX, rect.x - expandedMargin);
+          minY = Math.min(minY, rect.y - rect.h / 2 - expandedMargin);
+          maxX = Math.max(maxX, rect.x + rect.w + expandedMargin);
+          maxY = Math.max(maxY, rect.y + rect.h / 2 + expandedMargin);
+        });
+        questionBoundingBox = { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+      }
+    }
+    
+    if (currentAnswerSentence && centerSentenceWordRects.some(rect => rect.isQuestionWord !== undefined)) {
+      const answerWordRects = centerSentenceWordRects.filter(rect => rect.isQuestionWord === false);
+      if (answerWordRects.length > 0) {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        answerWordRects.forEach(rect => {
+          minX = Math.min(minX, rect.x - expandedMargin);
+          minY = Math.min(minY, rect.y - rect.h / 2 - expandedMargin);
+          maxX = Math.max(maxX, rect.x + rect.w + expandedMargin);
+          maxY = Math.max(maxY, rect.y + rect.h / 2 + expandedMargin);
+        });
+        answerBoundingBox = { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+      }
+    }
+    
+    // 마우스가 문장 영역 안에 있는지 확인
+    isOverSentenceArea = 
+      (questionBoundingBox && 
+       e.clientX >= questionBoundingBox.x && e.clientX <= questionBoundingBox.x + questionBoundingBox.width &&
+       e.clientY >= questionBoundingBox.y && e.clientY <= questionBoundingBox.y + questionBoundingBox.height) ||
+      (answerBoundingBox && 
+       e.clientX >= answerBoundingBox.x && e.clientX <= answerBoundingBox.x + answerBoundingBox.width &&
+       e.clientY >= answerBoundingBox.y && e.clientY <= answerBoundingBox.y + answerBoundingBox.height);
+    
+    // 단어 검사 (기존 코드)
     for (const wordRect of centerSentenceWordRects) {
       if ( e.clientX >= wordRect.x && e.clientX <= wordRect.x + wordRect.w &&
            e.clientY >= wordRect.y - wordRect.h/2 && e.clientY <= wordRect.y + wordRect.h/2 ) {
@@ -3324,7 +3930,8 @@ canvas.addEventListener('mousemove', e => {
       }
     }
   }
-  if (isOverPlayBtnQ || isOverPlayBtnA || isOverWord) return;
+  
+  if (isOverPlayBtnQ || isOverPlayBtnA || isOverWord || isOverSentenceArea) return;
 
   player.x = e.clientX - player.w / 2;
   player.y = e.clientY - player.h / 2;
