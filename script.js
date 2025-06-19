@@ -2951,7 +2951,10 @@ function startFireworks(sentenceTextForFireworks, globalSentenceIndex, explosion
     let centerX = explosionX; const margin = 8;
     if (centerX - maxRadius < margin) centerX = margin + maxRadius;
     if (centerX + maxRadius > canvas.width - margin) centerX = canvas.width - margin - maxRadius;    fireworks = [];    fireworksState = {
-        t: 0, phase: "explode", holdDuration: 40, explodeDuration: 180, gatherDuration: 170, // 50에서 170으로 늘림 (약 2초 추가)
+        t: 0, phase: "explode", holdDuration: 40, 
+        // PC에서는 폭발 과정 0.92초(92), 문장 정렬 1초(100)로 설정, 모바일에서는 기존 값 유지
+        explodeDuration: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 180 : 92,
+        gatherDuration: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 170 : 100,
         originX: centerX, originY: explosionY,
         sentenceTextToDisplayAfter: sentenceTextForFireworks,
         finalSentenceIndex: globalSentenceIndex,
@@ -3940,15 +3943,211 @@ canvas.addEventListener('mousemove', e => {
 });
 
 window.addEventListener('load', () => {
+    console.log("윈도우 로드 이벤트 실행");
     calculateTopOffset();
     let storedIndex = Number(localStorage.getItem('sentenceIndex') || 0);
     sentenceIndex = storedIndex % sentences.length;
     localStorage.setItem('sentenceIndex', sentenceIndex.toString());
-    if (bgmFiles.length > 0) {
-        console.log("BGM object initialized on load. Path: " + bgmAudio.src);
+    if (bgmFiles && bgmFiles.length > 0) {
+        console.log("BGM object initialized on load.");
     }
     getVoicesReliably().then(voices => {
         if(voices.length > 0) console.log("Voices pre-warmed successfully.");
         else console.warn("Voices pre-warming done, but no voices found.");
     }).catch(err => console.error("Error pre-warming voices on load:", err));
+    
+    // 드롭다운 문장 목록 초기화 (지연 실행으로 안정성 확보)
+    setTimeout(() => {
+        try {
+            initializeSentenceDropdown();
+        } catch (e) {
+            console.error("드롭다운 초기화 오류:", e);
+        }
+    }, 500);
 });
+
+// ---- 문장 드롭다운 기능 (기존 코드와 독립적으로 동작) ----
+function initializeSentenceDropdown() {
+    console.log("드롭다운 초기화 시작");
+    const dropdownBtn = document.getElementById('dropdownBtn');
+    const sentenceList = document.getElementById('sentenceList');
+    
+    if (!dropdownBtn || !sentenceList) {
+        console.error("드롭다운 요소를 찾을 수 없습니다.");
+        return;
+    }
+    
+    // 버튼 텍스트 업데이트 - 드롭다운 화살표 아이콘으로 고정
+    dropdownBtn.innerHTML = '&#9662;';  // 아래쪽 삼각형만 표시, 한글 제거
+    dropdownBtn.style.fontSize = '47px'; // 크기 고정
+    
+    // 드롭다운 버튼 클릭 이벤트 (터치와 클릭 모두 처리)
+    function toggleDropdown(event) {
+        console.log("드롭다운 토글 이벤트 발생");
+        if (event.cancelable) event.preventDefault();
+        event.stopPropagation();
+        
+        // 드롭다운 토글
+        if (sentenceList.style.display === 'block') {
+            console.log("드롭다운 닫기");
+            sentenceList.style.display = 'none';
+            // 화살표 모양 유지 (변경 없음)
+        } else {
+            console.log("드롭다운 열기");
+            // 항상 목록 새로 생성하여 최신 상태 유지
+            populateSentenceList();
+            
+            // 목록 표시
+            sentenceList.style.display = 'block';
+            
+            // 화살표 모양 유지 (변경 없음)
+            
+            // 현재 선택된 문장으로 스크롤
+            setTimeout(() => {
+                const activeItem = sentenceList.querySelector(`.sentence-item:nth-child(${sentenceIndex + 1})`);
+                if (activeItem) {
+                    activeItem.scrollIntoView({ behavior: 'auto', block: 'center' });
+                }
+            }, 100); // 시간을 늘려 안정적으로 스크롤 처리
+        }
+    }
+    
+    // 이벤트 리스너 제거 후 다시 등록 (중복 방지)
+    dropdownBtn.removeEventListener('click', toggleDropdown);
+    dropdownBtn.removeEventListener('touchend', toggleDropdown);
+    
+    // 클릭 이벤트 리스너
+    dropdownBtn.addEventListener('click', toggleDropdown);
+    
+    // 터치 이벤트 리스너 (모바일)
+    dropdownBtn.addEventListener('touchend', toggleDropdown);
+    
+    // 모바일 터치 이벤트 처리
+    sentenceList.addEventListener('touchstart', function(e) {
+        e.stopPropagation();
+    }, { passive: true });
+    
+    sentenceList.addEventListener('touchmove', function(e) {
+        e.stopPropagation();
+    }, { passive: true });
+    
+    // 문서 클릭 시 드롭다운 닫기
+    document.removeEventListener('click', documentClickHandler);
+    document.addEventListener('click', documentClickHandler);
+    
+    function documentClickHandler(event) {
+        if (sentenceList.style.display === 'block' && !sentenceList.contains(event.target) && event.target !== dropdownBtn) {
+            sentenceList.style.display = 'none';
+            // 화살표 모양 변경 없음 (고정)
+        }
+    }
+    
+    console.log("드롭다운 초기화 완료");
+}
+
+// 문장 목록 생성 함수
+function populateSentenceList() {
+    console.log("문장 목록 생성 시작");
+    const sentenceList = document.getElementById('sentenceList');
+    if (!sentenceList) {
+        console.error("문장 목록 요소를 찾을 수 없습니다.");
+        return;
+    }
+      // 기존 목록 비우기
+    sentenceList.innerHTML = '';    // 모든 문장 표시
+    // 전체 문장을 모두 표시
+    const sentencesToShow = sentences;
+    
+    sentencesToShow.forEach((sentence, index) => {
+        const sentenceItem = document.createElement('div');
+        sentenceItem.className = 'sentence-item';
+          // 홀수 문장(의문문)에 배경색 추가 - 인덱스는 0부터 시작하므로 짝수 인덱스가 홀수 문장
+        if (index % 2 === 0) {
+            sentenceItem.classList.add('question-sentence');
+        } 
+        // 짝수 번호 문장(인덱스 1, 3, 5...)에 추가 마진 클래스 적용
+        else {
+            sentenceItem.classList.add('answer-sentence');
+        }
+        
+        // 문장 번호와 내용 추가
+        const sentenceNumber = document.createElement('span');
+        sentenceNumber.className = 'sentence-number';
+        sentenceNumber.textContent = `${index + 1}.`;
+        
+        const sentenceText = document.createElement('span');
+        sentenceText.className = 'sentence-text';
+        
+        // 모든 줄바꿈을 제거하고 한 줄로 표시 (\\n 이스케이프 문자와 실제 줄바꿈 모두 처리)
+        let cleanedText = sentence.replace(/\\n|\n|\r/g, ' ');
+        // 두 개 이상의 연속된 공백을 하나로 줄임
+        cleanedText = cleanedText.replace(/\s+/g, ' ');
+        sentenceText.textContent = cleanedText;
+        
+        sentenceItem.appendChild(sentenceNumber);
+        sentenceItem.appendChild(sentenceText);
+          // 문장 클릭 이벤트 - 해당 문장으로 게임 시작하고 바로 문장 표시
+        sentenceItem.addEventListener('click', function(e) {
+            console.log(`문장 ${index + 1} 클릭됨`);
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // 문장 인덱스 설정 및 저장
+            sentenceIndex = index;
+            localStorage.setItem('sentenceIndex', sentenceIndex.toString());
+            
+            // 드롭다운 닫기
+            sentenceList.style.display = 'none';
+            
+            // 게임이 진행 중이면 중지
+            if (isGameRunning) {
+                stopGame();
+            }
+            
+            // 새 게임 시작 및 바로 문장 표시
+            setTimeout(() => {
+                startGame();
+                
+                // 게임 시작 후 바로 문장 표시 처리
+                setTimeout(() => {
+                    // 해당 문장 인덱스에 따라 홀수/짝수 문장 설정
+                    const isOdd = index % 2 === 0; // 0부터 시작하므로 index가 짝수면 실제로는 홀수 문장
+                      // 문장 분리 및 설정
+                    const sentenceText = sentences[index];
+                    
+                    // 줄바꿈 문자를 처리하여 두 줄로 분리 (이스케이프된 \\n과 실제 \n 모두 처리)
+                    const lines = sentenceText.split(/\\n|\n/);
+                    
+                    // 첫 줄과 두 번째 줄 설정 (없으면 빈 문자열)
+                    const line1 = lines[0] ? lines[0].trim() : "";
+                    const line2 = lines[1] ? lines[1].trim() : "";
+                    
+                    console.log(`문장 분리 결과 - 첫째줄: "${line1}", 둘째줄: "${line2}"`);
+                    
+                    // 문장 객체 생성
+                    const sentenceObj = { line1, line2 };
+                    
+                    // 홀수/짝수 위치에 문장 표시
+                    if (isOdd) {
+                        // 홀수 문장 (질문 문장)
+                        currentQuestionSentence = sentenceObj;
+                        currentQuestionSentenceIndex = index;
+                    } else {
+                        // 짝수 문장 (답변 문장)
+                        currentAnswerSentence = sentenceObj;
+                        currentAnswerSentenceIndex = index;
+                    }
+                    
+                    console.log(`문장 ${index + 1} 바로 표시됨:`, sentenceObj);
+                }, 300); // 게임 시작 후 약간의 지연 시간을 두고 문장 표시
+            }, 100);
+            
+            console.log(`문장 ${index + 1} 선택됨, 게임 시작 예정`);
+        });
+        
+        sentenceList.appendChild(sentenceItem);
+    });
+    
+    console.log(`문장 목록 생성 완료: ${sentences.length}개 문장`);
+    return sentenceList;
+}
